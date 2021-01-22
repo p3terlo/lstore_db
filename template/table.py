@@ -32,4 +32,11 @@ class Table:
 
     def __merge(self):
         pass
+
+    def display(self):
+        print(self.name)
+        print(self.key)
+        print(self.num_columns)
+        print(self.page_directory)
+        print(self.index)
  
