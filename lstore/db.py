@@ -1,4 +1,4 @@
-from template.table import Table
+from lstore.table import Table
 
 class Database():
 
