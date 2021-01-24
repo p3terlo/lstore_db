@@ -1,4 +1,4 @@
-from template.config import *
+from lstore.config import *
 
 
 class Page:
