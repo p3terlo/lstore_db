@@ -1,9 +1,9 @@
-from template.db import Database
-from template.query import Query
-from template.config import init
+from lstore.db import Database
+from lstore.query import Query
+from lstore.config import init
 
 from random import choice, randint, sample, seed
-#from colorama import Fore, Back, Style
+from colorama import Fore, Back, Style
 
 # Student Id and 4 grades
 init()
@@ -15,9 +15,7 @@ records = {}
 
 seed(3562901)
 
-#for i in range(0, 1000):
-
-for i in range(0, 8):    
+for i in range(0, 1000):
     key = 92106429 + randint(0, 9000)
     while key in records:
         key = 92106429 + randint(0, 9000)
@@ -25,13 +23,6 @@ for i in range(0, 8):
     query.insert(*records[key])
     print('inserted', records[key])
 
-grades_table.display_pages()
-
-for key in records:
-    grades_table.fetch(key)
-    
-#print(grades_table.key_map)
-""" 
 for key in records:
     record = query.select(key, 0, [1, 1, 1, 1, 1])[0]
     error = False
@@ -72,4 +63,3 @@ for c in range(0, grades_table.num_columns):
             print('sum error on [', keys[r[0]], ',', keys[r[1]], ']: ', result, ', correct: ', column_sum)
         else:
             print('sum on [', keys[r[0]], ',', keys[r[1]], ']: ', column_sum)
-""" 
