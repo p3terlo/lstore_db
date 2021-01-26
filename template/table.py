@@ -15,14 +15,6 @@ class Record:
         self.key = key
         self.columns = columns
 
-    def display(self):
-        print()
-        print("Record vals:")
-        print("Rid: %d with key %d" % (self.rid ,self.key))
-
-        #print(self.columns)
-        #print()
-
 class Table:
 
     """
@@ -36,90 +28,8 @@ class Table:
         self.num_columns = num_columns
         self.page_directory = {}
         self.index = Index(self)
-
-        #added structures
-        self.base_pages = []
-        self.key_map = {}
-        self.tail_pages = []
         pass
 
     def __merge(self):
         pass
-
-    def add(self, *columns): #can divide sub sections if needed
-
-        #initializtin pages
-        if (len(self.base_pages) == 0):
-            for i in range(self.num_columns):
-                new_base_page = Page()
-                #new_tail_page = Page()
-                self.base_pages.append(new_base_page)
-                
-        elif self.base_pages[0].is_full(): #adding more base pages if full
-            for i in range(self.num_columns):
-                new_base_page = Page()
-                #new_tail_page = Page()
-                self.base_pages.append(new_base_page)
-        
-
-        #defaulting record vals
-        record_key = columns[self.key]
-        epoch_time = time()
-        rid = len(self.key_map)
-        record_col = (0, rid, epoch_time, 0) #will edit schema later
-        new_record = Record(rid, record_key, record_col)
-        
-        self.key_map[record_key] = new_record #adding to mapping key -> record -> rid
-       
-
-        #calculations
-        slots = Page().get_size()/8
-        
-        page_offset = int(rid / slots) #offset of which pages to access
-        
-        slot_num = rid % slots #slot within page
-        page_num = self.num_columns * page_offset #calculation of which page
-
-
-        directory = []
-
-        for i in range(self.num_columns): #base 5 insertions to 5 pages
-            self.base_pages[i + page_num].write(columns[i])
-            directory.append(i+page_num)
-
-        #assuming rid is the slot number
-        self.page_directory[rid] = directory
-        
-    def fetch(self, key):
-
-        print("fetching record.....")
-        
-        record = self.key_map[key]
-
-        #record.display()
-        rid = record.rid
-
-        page_locations = self.page_directory[rid]
-
-        record_display = []
-
-        slot = self.slot_num(rid)
-
-        for i in page_locations:
-            record_display.append(self.base_pages[i].grab_slot(slot))
-
-        print(record_display)
-        print()
-        
-
-    def slot_num(self, rid):
-        num_slots = int(Page().get_size()/8)
-        slot_val = rid % num_slots
-
-        return slot_val
-        
-
-
-
-        
  
