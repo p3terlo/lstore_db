@@ -15,10 +15,9 @@ records = {}
 
 seed(3562901)
 
-#insertion phase
 #for i in range(0, 1000):
 
-for i in range(0, 8):
+for i in range(0, 8):    
     key = 92106429 + randint(0, 9000)
     while key in records:
         key = 92106429 + randint(0, 9000)
@@ -26,12 +25,11 @@ for i in range(0, 8):
     query.insert(*records[key])
     print('inserted', records[key])
 
-print(records)
-grades_table.display()
 for key in records:
-    print(type(key))
-
-"""    
+    grades_table.fetch(key)
+    
+#print(grades_table.key_map)
+""" 
 for key in records:
     record = query.select(key, 0, [1, 1, 1, 1, 1])[0]
     error = False
@@ -42,7 +40,6 @@ for key in records:
         print('select error on', key, ':', record, ', correct:', records[key])
     else:
         print('select on', key, ':', record)
-
 
 for key in records:
     updated_columns = [None, None, None, None, None]
@@ -73,6 +70,4 @@ for c in range(0, grades_table.num_columns):
             print('sum error on [', keys[r[0]], ',', keys[r[1]], ']: ', result, ', correct: ', column_sum)
         else:
             print('sum on [', keys[r[0]], ',', keys[r[1]], ']: ', column_sum)
-
-
-"""
+""" 
