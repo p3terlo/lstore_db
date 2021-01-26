@@ -25,6 +25,8 @@ for i in range(0, 8):
     query.insert(*records[key])
     print('inserted', records[key])
 
+grades_table.display_pages()
+
 for key in records:
     grades_table.fetch(key)
     

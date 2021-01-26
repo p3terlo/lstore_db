@@ -36,6 +36,3 @@ class Index:
 
     def drop_index(self, column_number):
         pass
-
-    def display(self):
-        print(self.indices)
