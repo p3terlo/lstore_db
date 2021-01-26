@@ -18,7 +18,7 @@ seed(3562901)
 #insertion phase
 #for i in range(0, 1000):
 
-for i in range(0, 20):
+for i in range(0, 8):
     key = 92106429 + randint(0, 9000)
     while key in records:
         key = 92106429 + randint(0, 9000)
@@ -26,8 +26,12 @@ for i in range(0, 20):
     query.insert(*records[key])
     print('inserted', records[key])
 
-print(grades_table.page_directory)
-"""
+print(records)
+grades_table.display()
+for key in records:
+    print(type(key))
+
+"""    
 for key in records:
     record = query.select(key, 0, [1, 1, 1, 1, 1])[0]
     error = False
