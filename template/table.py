@@ -55,8 +55,7 @@ class Table:
                 #new_tail_page = Page()
                 self.base_pages.append(new_base_page)
                 
-        elif self.base_pages[-1].is_full(): #adding more base pages if full
-            #print("is FULL")
+        elif self.base_pages[0].is_full(): #adding more base pages if full
             for i in range(self.num_columns):
                 new_base_page = Page()
                 #new_tail_page = Page()
@@ -71,9 +70,9 @@ class Table:
         new_record = Record(rid, record_key, record_col)
         
         self.key_map[record_key] = new_record #adding to mapping key -> record -> rid
-        #new_record.display()
-        #self.base_pages[0].write(columns[0])
+       
 
+        #calculations
         slots = Page().get_size()/8
         
         page_offset = int(rid / slots) #offset of which pages to access
@@ -81,24 +80,15 @@ class Table:
         slot_num = rid % slots #slot within page
         page_num = self.num_columns * page_offset #calculation of which page
 
-        #print(rid)
-       # print(slots)
-        
-        
+
         directory = []
 
         for i in range(self.num_columns): #base 5 insertions to 5 pages
             self.base_pages[i + page_num].write(columns[i])
             directory.append(i+page_num)
-      
-        #for i in self.base_pages:
-        #   i.display_mem()
 
         #assuming rid is the slot number
         self.page_directory[rid] = directory
-        #print(directory)
-        #print(self.page_directory)
-
         
     def fetch(self, key):
 
@@ -128,9 +118,7 @@ class Table:
 
         return slot_val
         
-    def display_pages(self):
-        for i in self.base_pages:
-            i.display_mem()
+
 
 
         
