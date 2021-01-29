@@ -132,6 +132,68 @@ class Table:
         for i in self.base_pages:
             i.display_mem()
 
+    def select(self, key, column, query_columns):
+        # print("Key:", key)
+        # print("Column:", column)
+        # print("Query_Columns:", query_columns)
+
+        #Get rid from key_map
+        record = self.key_map[key]
+        rid = record.rid
+
+        #Gather page locations from page_directory
+        page_locations = self.page_directory[rid]
+
+        #record_display: Array to hold record data
+        #slot: slot within page
+        record_display = []
+        slot = self.slot_num(rid)
+
+        #Grab records from pages
+        #only those that are being queried EX: [1,1,1,1,1]
+        for i in page_locations:
+            if(query_columns[i%self.num_columns] == 0): 
+                continue
+            record_display.append(self.base_pages[i].grab_slot(slot))
+
+        #Create temp record
+        #This is a placeholder implementation, need to talk about
+        #design as rn it does not seem that current 
+        #record.columns design would work with m1_tester
+        return_array = []
+        temp_record = Record(rid, key, record_display)
+        return_array.append(temp_record)
+        print("record_display:",record_display)
+
+        return return_array
+    
+
+
+    def update(self, key, *columns):
+        print("key:", key)
+        print("columns:", columns)
+
+        #Get rid from key_map
+        record = self.key_map[key]
+        rid = record.rid
+
+        #Gather page locations from page_directory
+        page_locations = self.page_directory[rid]
+
+        #record_display: Array to hold record data
+        #slot: slot within page
+        slot = self.slot_num(rid)
+
+        #Grab records from pages
+        #only those that are being queried EX: [1,1,1,1,1]
+        for i in page_locations:
+            print("i is",i)
+            self.base_pages[i].update(columns[i%5], slot)
+            print(self.base_pages[i].data[slot])
+
+
+        pass
+
 
         
  

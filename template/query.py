@@ -42,6 +42,8 @@ class Query:
     # Assume that select will never be called on a key that doesn't exist
     """
     def select(self, key, column, query_columns):
+        selectedObject = self.table.select(key, column, query_columns)
+        return selectedObject
         pass
 
     """
@@ -50,6 +52,7 @@ class Query:
     # Returns False if no records exist with given key or if the target record cannot be accessed due to 2PL locking
     """
     def update(self, key, *columns):
+        self.table.update(key, *columns)
         pass
 
     """

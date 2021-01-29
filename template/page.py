@@ -57,3 +57,25 @@ class Page:
 
         val = self.byte_int_conver(byte_val)
         return val
+
+
+
+    def update(self, value, slot):
+        if(value != None):
+            print("GO IN HERE", value, "slot", slot)
+            # val_to_bytes = value.to_bytes(8, 'big') #converting 64bit int to bytes
+            # print(val_to_bytes)
+
+            for i in range(8):
+                # self.data[slot + i] = val_to_bytes[i]
+                self.data[slot] = value
+
+
+            print(self.data[slot])
+
+        # else:
+        #     self.data[slot] = int(value or 0)
+        print("tried to update")
+
+
+        pass

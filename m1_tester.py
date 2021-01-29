@@ -31,18 +31,28 @@ for key in records:
     grades_table.fetch(key)
     
 #print(grades_table.key_map)
-""" 
+# print()
+# selectedObject = query.select(key, 0, [1,1,0,0,0])[0]
+# print("SelectedObject:", selectedObject)
+# print()
+# """ 
 for key in records:
     record = query.select(key, 0, [1, 1, 1, 1, 1])[0]
     error = False
     for i, column in enumerate(record.columns):
-        if column != records[key][i]:
+        if column != records[key][i]: #records[key] = [914..., 1,3,4,5]
             error = True
     if error:
         print('select error on', key, ':', record, ', correct:', records[key])
+        print()
     else:
         print('select on', key, ':', record)
+        print()
 
+print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+# updated_columns = [420, 420, 420, 420, 420]
+# query.update(key, *updated_columns)
+"""
 for key in records:
     updated_columns = [None, None, None, None, None]
     for i in range(1, grades_table.num_columns):
@@ -54,14 +64,16 @@ for key in records:
         record = query.select(key, 0, [1, 1, 1, 1, 1])[0]
         error = False
         for j, column in enumerate(record.columns):
+            print("column:", column, "vs records[key][j]:", records[key][j])
             if column != records[key][j]:
                 error = True
         if error:
             print('update error on', original, 'and', updated_columns, ':', record, ', correct:', records[key])
+            print("------------------------------------------------------------------------------")
         else:
-            print('update on', original, 'and', updated_columns, ':', record)
+            # print('update on', original, 'and', updated_columns, ':', record)
+            print("------------------------------------------------------------------------------")
         updated_columns[i] = None
-
 keys = sorted(list(records.keys()))
 for c in range(0, grades_table.num_columns):
     for i in range(0, 20):
