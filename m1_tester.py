@@ -1,9 +1,13 @@
-from lstore.db import Database
-from lstore.query import Query
-from lstore.config import init
+from template.db import Database
+from template.query import Query
+from template.config import init
 
 from random import choice, randint, sample, seed
+<<<<<<< HEAD
 # from colorama import Fore, Back, Style
+=======
+#from colorama import Fore, Back, Style
+>>>>>>> f6fcd473c13d3b0118ea5f7a5275224572f38303
 
 # Student Id and 4 grades
 init()
@@ -15,7 +19,9 @@ records = {}
 
 seed(3562901)
 
-for i in range(0, 1000):
+#for i in range(0, 1000):
+
+for i in range(0, 8):    
     key = 92106429 + randint(0, 9000)
     while key in records:
         key = 92106429 + randint(0, 9000)
@@ -23,6 +29,7 @@ for i in range(0, 1000):
     query.insert(*records[key])
     print('inserted', records[key])
 
+<<<<<<< HEAD
 # for key in records:
 #     record = query.select(key, 0, [1, 1, 1, 1, 1])[0]
 #     error = False
@@ -33,6 +40,25 @@ for i in range(0, 1000):
 #         print('select error on', key, ':', record, ', correct:', records[key])
 #     else:
 #         print('select on', key, ':', record)
+=======
+grades_table.display_pages()
+
+for key in records:
+    grades_table.fetch(key)
+    
+#print(grades_table.key_map)
+""" 
+for key in records:
+    record = query.select(key, 0, [1, 1, 1, 1, 1])[0]
+    error = False
+    for i, column in enumerate(record.columns):
+        if column != records[key][i]:
+            error = True
+    if error:
+        print('select error on', key, ':', record, ', correct:', records[key])
+    else:
+        print('select on', key, ':', record)
+>>>>>>> f6fcd473c13d3b0118ea5f7a5275224572f38303
 
 # for key in records:
 #     updated_columns = [None, None, None, None, None]
@@ -53,6 +79,7 @@ for i in range(0, 1000):
 #             print('update on', original, 'and', updated_columns, ':', record)
 #         updated_columns[i] = None
 
+<<<<<<< HEAD
 # keys = sorted(list(records.keys()))
 # for c in range(0, grades_table.num_columns):
 #     for i in range(0, 20):
@@ -63,3 +90,16 @@ for i in range(0, 1000):
 #             print('sum error on [', keys[r[0]], ',', keys[r[1]], ']: ', result, ', correct: ', column_sum)
 #         else:
 #             print('sum on [', keys[r[0]], ',', keys[r[1]], ']: ', column_sum)
+=======
+keys = sorted(list(records.keys()))
+for c in range(0, grades_table.num_columns):
+    for i in range(0, 20):
+        r = sorted(sample(range(0, len(keys)), 2))
+        column_sum = sum(map(lambda key: records[key][c], keys[r[0]: r[1] + 1]))
+        result = query.sum(keys[r[0]], keys[r[1]], c)
+        if column_sum != result:
+            print('sum error on [', keys[r[0]], ',', keys[r[1]], ']: ', result, ', correct: ', column_sum)
+        else:
+            print('sum on [', keys[r[0]], ',', keys[r[1]], ']: ', column_sum)
+""" 
+>>>>>>> f6fcd473c13d3b0118ea5f7a5275224572f38303

@@ -1,14 +1,14 @@
 # L-Store: A Real-time OLTP and OLAP System Implementation for ECS165A
 
 ## Main Contributers:
-#### - Caroline Qingyu Yau (Team Coordinator, Developer): cqyau@ucdavis.edu
-#### - Alvin Ho (System Architect, Developer, Tester): anho@ucdavis.edu
-#### - Peter Lo (System Architect, Developer): pelo@ucdavis.edu
-#### - Alejandro Armas (Developer, Tester): armas@ucdavis.edu
-#### - Roberto Lozano (System Architect, Developer): rlozano@ucdavis.edu
-#### - Teaching Fellow: Rohan Sogani: rmsogani@ucdavis.edu
-#### - Teaching Fellow: Sajjad Rahnama : srahnama@ucdavis.edu
-#### - Professor Mohammad Sadoghi : msadoghi@ucdavis.edu
+### - Caroline Qingyu Yau (Team Coordinator, Developer): cqyau@ucdavis.edu
+### - Alvin Ho (System Architect, Developer, Tester): anho@ucdavis.edu
+### - Peter Lo (System Architect, Developer): pelo@ucdavis.edu
+### - Alejandro Armas (Developer, Tester): armas@ucdavis.edu
+### - Roberto Lozano (System Architect, Developer): rlozano@ucdavis.edu
+### - Teaching Fellow: Rohan Sogani: rmsogani@ucdavis.edu
+### - Teaching Fellow: Sajjad Rahnama : srahnama@ucdavis.edu
+### - Professor Mohammad Sadoghi : msadoghi@ucdavis.edu
 
 ## **L-Store** [[Paper](https://openproceedings.org/2018/conf/edbt/paper-215.pdf), [Powerpoint](https://expolab.org/papers/l-store-slides.pdf)]
 
@@ -30,9 +30,8 @@
 - The milestone overview: the design and solution, what was accomplished and how? (8 minutes)
 - Q/A: Questions about various aspects of the project (4 minutes)
 - Demo: A live demonstration of the code, which includes adding, modifying, and querying the data (3 minutes)
-
+-
 ## Important Links
 
 - [Course](https://expolab.org/ecs165a-winter2021.html)
-
 - 
