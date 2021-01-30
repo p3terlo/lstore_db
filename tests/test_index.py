@@ -96,7 +96,7 @@ DATA =  [
 ]
 
 
-class Testindex_for_table(unittest.TestCase):
+class TestIndex(unittest.TestCase):
 
     table = index_for_table = None
 
