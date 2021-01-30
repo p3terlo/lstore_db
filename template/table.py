@@ -13,13 +13,12 @@ class Record:
     def __init__(self, rid, key, columns):
         self.rid = rid
         self.key = key
-        self.columns = columns
+        self.columns = columns #[914, 1,2,3,4]
 
     def display(self):
         print()
         print("Record vals:")
         print("Rid: %d with key %d" % (self.rid ,self.key))
-
         #print(self.columns)
         #print()
 
@@ -61,6 +60,7 @@ class Table:
                 new_base_page = Page()
                 #new_tail_page = Page()
                 self.base_pages.append(new_base_page)
+
         
 
         #defaulting record vals
@@ -146,8 +146,13 @@ class Table:
 
         #record_display: Array to hold record data
         #slot: slot within page
-        record_display = []
+        record_display = [] #914..,1,2,3,4
         slot = self.slot_num(rid)
+
+        #0, rid, timestamp, 0
+
+        #914..,1,2,3,4
+
 
         #Grab records from pages
         #only those that are being queried EX: [1,1,1,1,1]
@@ -187,9 +192,10 @@ class Table:
         #Grab records from pages
         #only those that are being queried EX: [1,1,1,1,1]
         for i in page_locations:
-            print("i is",i)
+            # print("BEFORE base page", i, "slot", slot, "is", self.base_pages[i].data[slot])
             self.base_pages[i].update(columns[i%5], slot)
-            print(self.base_pages[i].data[slot])
+            # print("AFTER base page", i, "slot", slot, "is", self.base_pages[i].data[slot])
+            # print("++++++++++")
 
 
         pass
