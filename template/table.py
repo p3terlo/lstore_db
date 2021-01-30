@@ -162,17 +162,14 @@ class Table:
             record_display.append(self.base_pages[i].grab_slot(slot))
 
         #Create temp record
-        #This is a placeholder implementation, need to talk about
-        #design as rn it does not seem that current 
-        #record.columns design would work with m1_tester
+        #Placeholder implementation. Talked w/ Alvin about this and still #deciding on what design to go with. For now, will query data,
+        #and place it into new record which is returned instead of #returning record on file.
         return_array = []
         temp_record = Record(rid, key, record_display)
         return_array.append(temp_record)
         print("record_display:",record_display)
 
         return return_array
-    
-
 
     def update(self, key, *columns):
         print("key:", key)
@@ -185,21 +182,41 @@ class Table:
         #Gather page locations from page_directory
         page_locations = self.page_directory[rid]
 
-        #record_display: Array to hold record data
         #slot: slot within page
         slot = self.slot_num(rid)
 
         #Grab records from pages
-        #only those that are being queried EX: [1,1,1,1,1]
+        #Only grabs the requested columns EX: [1,1,1,1,1]
         for i in page_locations:
-            # print("BEFORE base page", i, "slot", slot, "is", self.base_pages[i].data[slot])
             self.base_pages[i].update(columns[i%5], slot)
-            # print("AFTER base page", i, "slot", slot, "is", self.base_pages[i].data[slot])
-            # print("++++++++++")
-
 
         pass
 
+    def sum(self, start_range, end_range, col_index_to_add):
+        total = 0
 
-        
- 
+        for key in self.key_map:
+            if key < start_range:
+                continue
+            if key > end_range:
+                continue
+
+            #Grab record from key_map
+            #Grab rid from record object
+            # print(key)
+            record = self.key_map[key]
+            rid = record.rid
+
+            #Grab page locations from page_directory
+            #Grab single page we care about from page locations
+            page_locations = self.page_directory[rid]
+            page_to_add = page_locations[col_index_to_add]
+
+            #Get slot number from rid
+            slot = self.slot_num(rid)               
+
+            #print(self.base_pages[page_to_add].data)
+            #print(self.base_pages[page_to_add].data[(slot*8)+7])
+            total = total + self.base_pages[page_to_add].data[(slot*8)+7]
+
+        return total

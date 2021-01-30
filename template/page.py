@@ -63,7 +63,7 @@ class Page:
     def update(self, value, slot):
         slot_num = slot * 8
         if(value != None):
-            print("Value to update", value, "slot", slot_num)
+            # print("Value to update", value, "slot", slot_num)
             val_to_bytes = value.to_bytes(8, 'big') #converting 64bit int to bytes
 
             for i in range(8):
