@@ -1,4 +1,5 @@
-from lstore.page import *
+from lstore.page import Page, PAGE_CAPACITY_IN_BYTES, INTEGER_CAPACITY_IN_BYTES
+
 from lstore.index import Index
 from time import time
 
@@ -20,8 +21,6 @@ class Record:
         print("Record vals:")
         print("Rid: %d with key %d" % (self.rid ,self.key))
 
-        #print(self.columns)
-        #print()
 
 class Table:
 
@@ -38,7 +37,7 @@ class Table:
         self.index = Index(self)
 
         #added structures
-        self.base_pages = []
+        self.base_pages = [] 
         self.key_map = {}
         self.tail_pages = []
         pass
@@ -46,59 +45,52 @@ class Table:
     def __merge(self):
         pass
 
-    def add(self, *columns): #can divide sub sections if needed
 
-        #initializtin pages
-        if (len(self.base_pages) == 0):
-            for i in range(self.num_columns):
+    def __initialize_empty_base_pages(self):
+        noBasePagesInTable = len(self.base_pages) == 0
+
+        if (noBasePagesInTable):
+            for _ in range(self.num_columns):
                 new_base_page = Page()
                 #new_tail_page = Page()
                 self.base_pages.append(new_base_page)
                 
-        elif self.base_pages[-1].is_full(): #adding more base pages if full
-            #print("is FULL")
-            for i in range(self.num_columns):
+        elif self.base_pages[-1].is_full(): # adding more base pages if last page is full
+            for _ in range(self.num_columns):
                 new_base_page = Page()
                 #new_tail_page = Page()
                 self.base_pages.append(new_base_page)
-        
+
+
+    def add(self, *columns): #can divide sub sections if needed
+
+        self.__initialize_empty_base_pages()
 
         #defaulting record vals
         record_key = columns[self.key]
         epoch_time = time()
         rid = len(self.key_map)
-        record_col = (0, rid, epoch_time, 0) #will edit schema later
+
+        # FIXME will edit schema later
+        record_col = (0, rid, epoch_time, 0)
         new_record = Record(rid, record_key, record_col)
         
+        # FIXME change key_map to index
         self.key_map[record_key] = new_record #adding to mapping key -> record -> rid
         #new_record.display()
-        #self.base_pages[0].write(columns[0])
 
-        slots = Page().get_size()/8
-        
-        page_offset = int(rid / slots) #offset of which pages to access
-        
-        slot_num = rid % slots #slot within page
-        page_num = self.num_columns * page_offset #calculation of which page
-
-        #print(rid)
-       # print(slots)
-        
+        start_page_id = self.__rid_to_page_id(self.num_columns, rid)
         
         directory = []
 
-        for i in range(self.num_columns): #base 5 insertions to 5 pages
-            self.base_pages[i + page_num].write(columns[i])
-            directory.append(i+page_num)
-      
-        #for i in self.base_pages:
-        #   i.display_mem()
+        for col_num in range(self.num_columns): #base 5 insertions to 5 pages
+            page_id = col_num + start_page_id
+            self.base_pages[page_id].write(columns[col_num])
+            directory.append(page_id)
 
         #assuming rid is the slot number
         self.page_directory[rid] = directory
-        #print(directory)
-        #print(self.page_directory)
-
+        
         
     def fetch(self, key):
 
@@ -109,28 +101,43 @@ class Table:
         #record.display()
         rid = record.rid
 
-        page_locations = self.page_directory[rid]
+        page_ids_belonging_to_rid = self.page_directory[rid]
 
         record_display = []
 
-        slot = self.slot_num(rid)
+        slot_id = self.calculate_slot_number(rid)
 
-        for i in page_locations:
-            record_display.append(self.base_pages[i].grab_slot(slot))
+        for page_id in page_ids_belonging_to_rid:
+            record_display.append(self.base_pages[page_id].grab_slot(slot_id))
 
         print(record_display)
-        print()
         
 
-    def slot_num(self, rid):
-        num_slots = int(Page().get_size()/8)
-        slot_val = rid % num_slots
+    @staticmethod
+    def calculate_slot_number(rid):
+        slots_per_page = int(PAGE_CAPACITY_IN_BYTES / INTEGER_CAPACITY_IN_BYTES)
+        slot_id = rid % slots_per_page
+        return slot_id
 
-        return slot_val
-        
+
+    @staticmethod
+    def __rid_to_page_id(num_columns, rid):
+        '''
+        Given the # of Columns of a base page. 
+        We map a RID -> page_id
+        '''
+        slots_per_page = PAGE_CAPACITY_IN_BYTES / INTEGER_CAPACITY_IN_BYTES
+    
+        # Floor Operation with Type Conversion
+        page_offset = int(rid / slots_per_page) #offset of which pages to access
+        page_id = num_columns * page_offset #calculation of which page
+
+        return page_id
+
+
     def display_pages(self):
-        for i in self.base_pages:
-            i.display_mem()
+        for page in self.base_pages:
+            page.display_internal_memory()
 
 
         
