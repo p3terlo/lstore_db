@@ -55,8 +55,12 @@ class Table:
 
 
     def create_base_pages(self):
+
+        base_pages_full = False
         noBasePagesInTable = len(self.base_pages) == 0
-        base_pages_full = self.base_pages[-1].is_full()
+
+        if not noBasePagesInTable:
+            base_pages_full = self.base_pages[-1].is_full()
 
         # If initializing empty base pages for the first time, or if current set of base pages are full, create new set of base pages
         if ((noBasePagesInTable) or (base_pages_full)):
@@ -93,13 +97,13 @@ class Table:
         
         # Key -> record -> RID
         self.key_map[record_key] = base_record
-
+        slots = PAGE_CAPACITY_IN_BYTES/INTEGER_CAPACITY_IN_BYTES
+        slot_num = rid % slots #slot within page 
         page_range_num = int(rid / PAGE_RANGE)
         page_offset = int(rid / slots) #offset of which pages to access
         page_num = self.num_columns * page_offset #calculation of which page       
-        slots = Page().get_size()/8
-        slot_num = rid % slots #slot within page 
-
+        
+        
         for i in range(self.num_columns): #base 5 insertions to 5 pages
             self.base_pages[i + page_num].write(columns[i])
 
@@ -130,13 +134,13 @@ class Table:
         print()
      
     
-       @staticmethod
+    @staticmethod
     def calculate_slot_number(rid):
         slots_per_page = int(PAGE_CAPACITY_IN_BYTES / INTEGER_CAPACITY_IN_BYTES)
         slot_id = rid % slots_per_page
         return slot_id
      
-      @staticmethod
+    @staticmethod
     def __rid_to_page_id(num_columns, rid):
         '''
         Given the # of Columns of a base page. 
