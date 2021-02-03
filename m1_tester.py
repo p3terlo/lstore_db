@@ -1,6 +1,6 @@
-from template.db import Database
-from template.query import Query
-from template.config import init
+from lstore.db import Database
+from lstore.query import Query
+from lstore.config import init
 
 from random import choice, randint, sample, seed
 #from colorama import Fore, Back, Style
@@ -43,24 +43,24 @@ for key in records:
     else:
         print('select on', key, ':', record)
 
-for key in records:
-    updated_columns = [None, None, None, None, None]
-    for i in range(1, grades_table.num_columns):
-        value = randint(0, 20)
-        updated_columns[i] = value
-        original = records[key].copy()
-        records[key][i] = value
-        query.update(key, *updated_columns)
-        record = query.select(key, 0, [1, 1, 1, 1, 1])[0]
-        error = False
-        for j, column in enumerate(record.columns):
-            if column != records[key][j]:
-                error = True
-        if error:
-            print('update error on', original, 'and', updated_columns, ':', record, ', correct:', records[key])
-        else:
-            print('update on', original, 'and', updated_columns, ':', record)
-        updated_columns[i] = None
+# for key in records:
+#     updated_columns = [None, None, None, None, None]
+#     for i in range(1, grades_table.num_columns):
+#         value = randint(0, 20)
+#         updated_columns[i] = value
+#         original = records[key].copy()
+#         records[key][i] = value
+#         query.update(key, *updated_columns)
+#         record = query.select(key, 0, [1, 1, 1, 1, 1])[0]
+#         error = False
+#         for j, column in enumerate(record.columns):
+#             if column != records[key][j]:
+#                 error = True
+#         if error:
+#             print('update error on', original, 'and', updated_columns, ':', record, ', correct:', records[key])
+#         else:
+#             print('update on', original, 'and', updated_columns, ':', record)
+#         updated_columns[i] = None
 
 keys = sorted(list(records.keys()))
 for c in range(0, grades_table.num_columns):
