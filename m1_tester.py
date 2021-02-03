@@ -1,6 +1,6 @@
-from template.db import Database
-from template.query import Query
-from template.config import init
+from lstore.db import Database
+from lstore.query import Query
+from lstore.config import init
 
 from random import choice, randint, sample, seed
 #from colorama import Fore, Back, Style
@@ -15,38 +15,27 @@ records = {}
 
 seed(3562901)
 
-#for i in range(0, 1000):
+# for i in range(0, 1000):
 
-for i in range(0, 8):    
-    key = 92106429 + randint(0, 9000)
-    while key in records:
-        key = 92106429 + randint(0, 9000)
-    records[key] = [key, randint(0, 20), randint(0, 20), randint(0, 20), randint(0, 20)]
-    query.insert(*records[key])
-    print('inserted', records[key])
+# for i in range(0, 8):    
+#     key = 92106429 + randint(0, 9000)
+#     while key in records:
+#         key = 92106429 + randint(0, 9000)
+#     records[key] = [key, randint(0, 20), randint(0, 20), randint(0, 20), randint(0, 20)]
+#     query.insert(*records[key])
+#     print('inserted', records[key])
 
-grades_table.display_pages()
-
-for key in records:
-    grades_table.fetch(key)
-    
-#print(grades_table.key_map)
-
-# """ 
 # for key in records:
 #     record = query.select(key, 0, [1, 1, 1, 1, 1])[0]
 #     error = False
 #     for i, column in enumerate(record.columns):
-#         if column != records[key][i]: #records[key] = 914..., 1,3,4,5
+#         if column != records[key][i]:
 #             error = True
 #     if error:
 #         print('select error on', key, ':', record, ', correct:', records[key])
-#         print()
 #     else:
 #         print('select on', key, ':', record)
-#         print()
 
-# print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
 # for key in records:
 #     updated_columns = [None, None, None, None, None]
 #     for i in range(1, grades_table.num_columns):
@@ -58,31 +47,75 @@ for key in records:
 #         record = query.select(key, 0, [1, 1, 1, 1, 1])[0]
 #         error = False
 #         for j, column in enumerate(record.columns):
-#             print("column:", column, "vs records[key][j]:", records[key][j])
 #             if column != records[key][j]:
 #                 error = True
 #         if error:
 #             print('update error on', original, 'and', updated_columns, ':', record, ', correct:', records[key])
-#             print("------------------------------------------------------------------------------")
 #         else:
 #             print('update on', original, 'and', updated_columns, ':', record)
-#             print("------------------------------------------------------------------------------")
 #         updated_columns[i] = None
 
-
-
-keys = sorted(list(records.keys())) #sorts records
+# keys = sorted(list(records.keys())) #sorts records
 # for c in range(0, grades_table.num_columns): #0-4
-for c in range(0, 1): #0-4
+#     for i in range(0, 20): #0-19
 
-    for i in range(0, 20): #0-19
+#         r = sorted(sample(range(0, len(keys)), 2))
+#         column_sum = sum(map(lambda key: records[key][c], keys[r[0]: r[1] + 1]))
+#         result = query.sum(keys[r[0]], keys[r[1]], c)
+#         if column_sum != result:
+#             print('sum error on [', keys[r[0]], ',', keys[r[1]], ']: ', result, ', correct: ', column_sum)
+#         else:
+#             print('sum on [', keys[r[0]], ',', keys[r[1]], ']: ', column_sum)
+
+
+for i in range(0, 1000):
+    key = 92106429 + randint(0, 9000)
+    while key in records:
+        key = 92106429 + randint(0, 9000)
+    records[key] = [key, randint(0, 20), randint(0, 20), randint(0, 20), randint(0, 20)]
+    query.insert(*records[key])
+    print('inserted', records[key])
+
+for key in records:
+    record = query.select(key, 0, [1, 1, 1, 1, 1])[0]
+    error = False
+    for i, column in enumerate(record.columns):
+        if column != records[key][i]:
+            error = True
+    if error:
+        print('select error on', key, ':', record, ', correct:', records[key])
+    else:
+        # print('select on', key, ':', record)
+        tempVar = 0
+
+for key in records:
+    updated_columns = [None, None, None, None, None]
+    for i in range(1, grades_table.num_columns):
+        value = randint(0, 20)
+        updated_columns[i] = value
+        original = records[key].copy()
+        records[key][i] = value
+        query.update(key, *updated_columns)
+        record = query.select(key, 0, [1, 1, 1, 1, 1])[0]
+        error = False
+        for j, column in enumerate(record.columns):
+            if column != records[key][j]:
+                error = True
+        if error:
+            print('update error on', original, 'and', updated_columns, ':', record, ', correct:', records[key])
+        else:
+            # print('update on', original, 'and', updated_columns, ':', record)
+            tempvar = 0
+        updated_columns[i] = None
+
+keys = sorted(list(records.keys()))
+for c in range(0, grades_table.num_columns):
+    for i in range(0, 20):
         r = sorted(sample(range(0, len(keys)), 2))
         column_sum = sum(map(lambda key: records[key][c], keys[r[0]: r[1] + 1]))
         result = query.sum(keys[r[0]], keys[r[1]], c)
         if column_sum != result:
             print('sum error on [', keys[r[0]], ',', keys[r[1]], ']: ', result, ', correct: ', column_sum)
         else:
-            print('sum on [', keys[r[0]], ',', keys[r[1]], ']: ', column_sum)
-
-# print(keys)
-# print(len(grades_table.base_pages))
+            # print('sum on [', keys[r[0]], ',', keys[r[1]], ']: ', column_sum)
+            tempVar = 0
