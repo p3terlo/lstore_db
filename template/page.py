@@ -1,7 +1,5 @@
 from template.config import *
 
-MEM_SIZE = 24
-
 class Page:
 
     def __init__(self):
@@ -15,6 +13,10 @@ class Page:
         if self.num_records == MEM_SIZE/8:
             return True
         return False
+
+    def next_empty_slot(self):
+        slot_num = self.num_records * 8
+        return slot_num
 
     def write(self, value):
         val_to_bytes = value.to_bytes(8, 'big') #converting 64bit int to bytes

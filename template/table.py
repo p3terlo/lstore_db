@@ -7,6 +7,10 @@ RID_COLUMN = 1
 TIMESTAMP_COLUMN = 2
 SCHEMA_ENCODING_COLUMN = 3
 
+NULL_PTR = 0
+
+CLEAN_BIT = 0
+DIRTY_BIT = 1
 
 class Record:
 
@@ -19,8 +23,6 @@ class Record:
         print()
         print("Record vals:")
         print("Rid: %d with key %d" % (self.rid ,self.key))
-        #print(self.columns)
-        #print()
 
 class Table:
 
@@ -33,71 +35,71 @@ class Table:
         self.name = name
         self.key = key
         self.num_columns = num_columns
+        # Page directory should map RID to [page range, page, offset (AKA slot number)]
         self.page_directory = {}
         self.index = Index(self)
 
-        #added structures
-        self.base_pages = []
+        # Added structures
         self.key_map = {}
+        self.base_pages = []
         self.tail_pages = []
-        pass
+
 
     def __merge(self):
         pass
 
-    def add(self, *columns): #can divide sub sections if needed
 
-        #initializtin pages
-        if (len(self.base_pages) == 0):
-            for i in range(self.num_columns):
+    def create_base_pages(self):
+        noBasePagesInTable = len(self.base_pages) == 0
+        base_pages_full = self.base_pages[-1].is_full()
+
+        # If initializing empty base pages for the first time, or if current set of base pages are full, create new set of base pages
+        if ((noBasePagesInTable) or (base_pages_full)):
+            for _ in range(self.num_columns):
                 new_base_page = Page()
-                #new_tail_page = Page()
-                self.base_pages.append(new_base_page)
-                
-        elif self.base_pages[-1].is_full(): #adding more base pages if full
-            #print("is FULL")
-            for i in range(self.num_columns):
-                new_base_page = Page()
-                #new_tail_page = Page()
                 self.base_pages.append(new_base_page)
 
-        
 
-        #defaulting record vals
+    def create_tail_pages(self):
+        num_tail_pages = len(self.tail_pages)
+        num_records = len(self.key_map)
+
+        noTailPagesInTable = num_tail_pages == 0
+        records_covered = (num_tail_pages / self.num_columns) * PAGE_RANGE
+
+        if ((noTailPagesInTable) or (num_records > records_covered)):
+            for _ in range(self.num_columns):
+                new_tail_page = Page()
+                self.tail_pages.append(new_tail_page)
+
+
+    def add(self, *columns):
+
+        self.create_base_pages()
+        self.create_tail_pages() 
+
+        # Create record
         record_key = columns[self.key]
         epoch_time = time()
         rid = len(self.key_map)
-        record_col = (0, rid, epoch_time, 0) #will edit schema later
-        new_record = Record(rid, record_key, record_col)
+        # Record_col stored as indirection, RID, timestamp, schema encoding 
+        record_col = (NULL_PTR, rid, epoch_time, CLEAN_BIT)
+        base_record = Record(rid, record_key, record_col)
         
-        self.key_map[record_key] = new_record #adding to mapping key -> record -> rid
-        #new_record.display()
-        #self.base_pages[0].write(columns[0])
+        # Key -> record -> RID
+        self.key_map[record_key] = base_record
 
-        slots = Page().get_size()/8
-        
+        page_range_num = int(rid / PAGE_RANGE)
         page_offset = int(rid / slots) #offset of which pages to access
-        
-        slot_num = rid % slots #slot within page
-        page_num = self.num_columns * page_offset #calculation of which page
-
-        #print(rid)
-       # print(slots)
-        
-        
-        directory = []
+        page_num = self.num_columns * page_offset #calculation of which page       
+        slots = Page().get_size()/8
+        slot_num = rid % slots #slot within page 
 
         for i in range(self.num_columns): #base 5 insertions to 5 pages
             self.base_pages[i + page_num].write(columns[i])
-            directory.append(i+page_num)
-      
-        #for i in self.base_pages:
-        #   i.display_mem()
 
-        #assuming rid is the slot number
+        directory = [page_range_num, page_num, slot_num]
         self.page_directory[rid] = directory
-        #print(directory)
-        #print(self.page_directory)
 
         
     def fetch(self, key):
@@ -171,26 +173,44 @@ class Table:
 
         return return_array
 
+    # Implemented with tail page and page range
     def update(self, key, *columns):
-        print("key:", key)
-        print("columns:", columns)
 
-        #Get rid from key_map
-        record = self.key_map[key]
-        rid = record.rid
+        self.create_tail_pages() 
 
-        #Gather page locations from page_directory
-        page_locations = self.page_directory[rid]
+        # Create new record
+        new_rid = len(self.key_map)
+        new_time = time()
+        new_record_col = (NULL_PTR, new_rid, new_time, CLEAN_BIT)
+        new_record = Record(new_rid, key, new_record_col)
 
-        #slot: slot within page
-        slot = self.slot_num(rid)
+        # Update indirection columns
+        base_record = self.key_map[key]
+        latest_record = base_record.columns[INDIRECTION_COLUMN]
+        # If base record had previous updates
+        if latest_record != NULL_PTR:
+            # Point new record's indirection to previous most recent record
+            new_record_col = (latest_record, new_rid, new_time, CLEAN_BIT)
+        # If base record had no updates
+        else:
+            # Point new record's indirection to base record 
+            new_record_col = (base_record.rid, new_rid, new_time, CLEAN_BIT)
 
-        #Grab records from pages
-        #Only grabs the requested columns EX: [1,1,1,1,1]
-        for i in page_locations:
-            self.base_pages[i].update(columns[i%5], slot)
+        # Set base record's indirection column to new record's RID
+        base_record.columns[INDIRECTION_COLUMN] = new_rid
 
-        pass
+        # Write new record to tail page
+        page_offset = int(new_rid / PAGE_RANGE)
+        page_num = self.num_columns * page_offset
+
+        for i in range(self.num_columns):
+            self.tail_pages[page_num + i].write(columns[i])
+
+        # Update page directory
+        slot_num = self.tail_pages[page_num].next_empty_slot()
+        directory = [page_offset, page_num, slot_num]
+        self.page_directory[new_rid] = directory
+
 
     def sum(self, start_range, end_range, col_index_to_add):
         total = 0

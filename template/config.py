@@ -1,7 +1,5 @@
 # Global Setting for the Database
 # PageSize, StartRID, etc..
-class init():
-
-    def __init__(self):
-        pass
+PAGE_RANGE = 2000
+MEM_SIZE = 24
 
