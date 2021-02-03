@@ -1,4 +1,5 @@
-from template.config import *
+from lstore.config import *
+
 
 class Page:
 
@@ -17,12 +18,11 @@ class Page:
     def next_empty_slot(self):
         slot_num = self.num_records * 8
         return slot_num
-
+      
     def write(self, value):
         val_to_bytes = value.to_bytes(8, 'big') #converting 64bit int to bytes
         slot_num = self.num_records * 8
 
-        
         for i in range(8): #adding 64 bits into 8 bytes 
             self.data[slot_num + i] = val_to_bytes[i]
 

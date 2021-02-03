@@ -1,5 +1,5 @@
-from template.page import *
-from template.index import Index
+from lstore.page import *
+from lstore.index import Index
 from time import time
 
 INDIRECTION_COLUMN = 0
@@ -23,6 +23,7 @@ class Record:
         print()
         print("Record vals:")
         print("Rid: %d with key %d" % (self.rid ,self.key))
+        
 
 class Table:
 
@@ -35,6 +36,7 @@ class Table:
         self.name = name
         self.key = key
         self.num_columns = num_columns
+
         # Page directory should map RID to [page range, page, offset (AKA slot number)]
         self.page_directory = {}
         self.index = Index(self)
@@ -135,9 +137,6 @@ class Table:
             i.display_mem()
 
     def select(self, key, column, query_columns):
-        # print("Key:", key)
-        # print("Column:", column)
-        # print("Query_Columns:", query_columns)
 
         #Get rid from key_map
         record = self.key_map[key]
@@ -148,29 +147,23 @@ class Table:
 
         #record_display: Array to hold record data
         #slot: slot within page
-        record_display = [] #914..,1,2,3,4
+
+        record_display = [] #[91469300,1,2,3,4]
         slot = self.slot_num(rid)
 
-        #0, rid, timestamp, 0
-
-        #914..,1,2,3,4
-
-
-        #Grab records from pages
-        #only those that are being queried EX: [1,1,1,1,1]
+        #Only grab queried records from pages EX: [1,1,1,1,1]
         for i in page_locations:
             if(query_columns[i%self.num_columns] == 0): 
                 continue
             record_display.append(self.base_pages[i].grab_slot(slot))
 
         #Create temp record
-        #Placeholder implementation. Talked w/ Alvin about this and still #deciding on what design to go with. For now, will query data,
+        #Placeholder Talked w/ Alvin about this and still deciding on what design to go with. For now, will query data,
         #and place it into new record which is returned instead of #returning record on file.
         return_array = []
         temp_record = Record(rid, key, record_display)
         return_array.append(temp_record)
-        print("record_display:",record_display)
-
+        
         return return_array
 
     # Implemented with tail page and page range
@@ -216,14 +209,11 @@ class Table:
         total = 0
 
         for key in self.key_map:
-            if key < start_range:
-                continue
-            if key > end_range:
+            if key < start_range or key > end_range:
                 continue
 
             #Grab record from key_map
             #Grab rid from record object
-            # print(key)
             record = self.key_map[key]
             rid = record.rid
 
@@ -234,9 +224,6 @@ class Table:
 
             #Get slot number from rid
             slot = self.slot_num(rid)               
-
-            #print(self.base_pages[page_to_add].data)
-            #print(self.base_pages[page_to_add].data[(slot*8)+7])
-            total = total + self.base_pages[page_to_add].data[(slot*8)+7]
+            total = total + self.base_pages[page_to_add].grab_slot(slot)
 
         return total

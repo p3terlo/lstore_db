@@ -1,4 +1,4 @@
-from template.table import Table
+from lstore.table import Table
 
 class Database():
 
@@ -43,4 +43,3 @@ class Database():
             return table
         except KeyError:
             print("get_table Error: No table exists with name %s" % (name))
-            
