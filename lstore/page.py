@@ -1,7 +1,5 @@
 from lstore.config import *
 
-PAGE_CAPACITY_IN_BYTES = 32 
-INTEGER_CAPACITY_IN_BYTES = 8
 
 class Page:
 
@@ -17,7 +15,12 @@ class Page:
     def is_full(self): #returns true if slots are filled
         return self.num_records == int(PAGE_CAPACITY_IN_BYTES/INTEGER_CAPACITY_IN_BYTES)
            
-
+        
+    def next_empty_slot(self):
+        slot_num = self.num_records * 8
+        return slot_num
+      
+        
     def write(self, value):
         val_as_bytes = value.to_bytes(INTEGER_CAPACITY_IN_BYTES, 'big')
         slot_num = self.num_records * INTEGER_CAPACITY_IN_BYTES
@@ -64,3 +67,16 @@ class Page:
 
         integer = self.broken_bytes_to_int(byte_val)
         return integer
+      
+      
+     def update(self, value, slot):
+        slot_num = slot * 8
+        if(value != None):
+            # print("Value to update", value, "slot", slot_num)
+            val_to_bytes = value.to_bytes(8, 'big') #converting 64bit int to bytes
+
+            for i in range(8):
+                self.data[slot_num + i] = val_to_bytes[i]
+
+        pass
+      

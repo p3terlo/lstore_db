@@ -1,7 +1,6 @@
 # Global Setting for the Database
 # PageSize, StartRID, etc..
-class init():
 
-    def __init__(self):
-        pass
-
+PAGE_RANGE = 2000
+PAGE_CAPACITY_IN_BYTES = 32 
+INTEGER_CAPACITY_IN_BYTES = 8

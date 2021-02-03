@@ -1,7 +1,6 @@
 from lstore.table import Table, Record
 from lstore.index import Index
 
-
 class Query:
     """
     # Creates a Query object that can perform different queries on the specified table 
@@ -31,7 +30,6 @@ class Query:
     def insert(self, *columns):
         schema_encoding = '0' * self.table.num_columns
         self.table.add(*columns)
-        pass
 
     """
     # Read a record with specified key
@@ -42,7 +40,8 @@ class Query:
     # Assume that select will never be called on a key that doesn't exist
     """
     def select(self, key, column, query_columns):
-        pass
+        selectedObject = self.table.select(key, column, query_columns)
+        return selectedObject
 
     """
     # Update a record with specified key and columns
@@ -50,7 +49,8 @@ class Query:
     # Returns False if no records exist with given key or if the target record cannot be accessed due to 2PL locking
     """
     def update(self, key, *columns):
-        pass
+        self.table.update(key, *columns)
+
 
     """
     :param start_range: int         # Start of the key range to aggregate 
@@ -61,7 +61,9 @@ class Query:
     # Returns False if no record exists in the given range
     """
     def sum(self, start_range, end_range, aggregate_column_index):
-        pass
+        total = self.table.sum(start_range, end_range, aggregate_column_index)
+        return total
+
 
     """
     incremenets one column of the record
