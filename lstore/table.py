@@ -1,4 +1,5 @@
 from lstore.page import *
+from lstore.config import PAGE_CAPACITY_IN_BYTES, INTEGER_CAPACITY_IN_BYTES
 from lstore.index import Index
 from time import time
 
@@ -7,23 +8,25 @@ RID_COLUMN = 1
 TIMESTAMP_COLUMN = 2
 SCHEMA_ENCODING_COLUMN = 3
 
+
 NULL_PTR = 0
 
 CLEAN_BIT = 0
 DIRTY_BIT = 1
+
 
 class Record:
 
     def __init__(self, rid, key, columns):
         self.rid = rid
         self.key = key
-        self.columns = columns #[914, 1,2,3,4]
+        self.columns = columns
+
 
     def display(self):
         print()
         print("Record vals:")
         print("Rid: %d with key %d" % (self.rid ,self.key))
-        
 
 class Table:
 
@@ -114,28 +117,46 @@ class Table:
         rid = record.rid
 
         page_locations = self.page_directory[rid]
-
+        page_ids_belonging_to_rid = self.page_directory[rid]
+  
         record_display = []
 
-        slot = self.slot_num(rid)
+        slot_id = self.calculate_slot_number(rid)
 
-        for i in page_locations:
-            record_display.append(self.base_pages[i].grab_slot(slot))
+        for page_id in page_ids_belonging_to_rid:
+            record_display.append(self.base_pages[page_id].grab_slot(slot_id))
 
         print(record_display)
         print()
-        
+     
+    
+       @staticmethod
+    def calculate_slot_number(rid):
+        slots_per_page = int(PAGE_CAPACITY_IN_BYTES / INTEGER_CAPACITY_IN_BYTES)
+        slot_id = rid % slots_per_page
+        return slot_id
+     
+      @staticmethod
+    def __rid_to_page_id(num_columns, rid):
+        '''
+        Given the # of Columns of a base page. 
+        We map a RID -> page_id
+        '''
+        slots_per_page = PAGE_CAPACITY_IN_BYTES / INTEGER_CAPACITY_IN_BYTES
+    
+        # Floor Operation with Type Conversion
+        page_offset = int(rid / slots_per_page) #offset of which pages to access
+        page_id = num_columns * page_offset #calculation of which page
 
-    def slot_num(self, rid):
-        num_slots = int(Page().get_size()/8)
-        slot_val = rid % num_slots
+        return page_id
 
-        return slot_val
+
         
     def display_pages(self):
-        for i in self.base_pages:
-            i.display_mem()
-
+        for page in self.base_pages:
+            page.display_internal_memory()
+            
+      
     def select(self, key, column, query_columns):
 
         #Get rid from key_map
@@ -143,19 +164,19 @@ class Table:
         rid = record.rid
 
         #Gather page locations from page_directory
-        page_locations = self.page_directory[rid]
+        page_ids_belonging_to_rid = self.page_directory[rid]
 
         #record_display: Array to hold record data
         #slot: slot within page
 
         record_display = [] #[91469300,1,2,3,4]
-        slot = self.slot_num(rid)
+        slot = self.calculate_slot_number(rid)
 
         #Only grab queried records from pages EX: [1,1,1,1,1]
-        for i in page_locations:
-            if(query_columns[i%self.num_columns] == 0): 
+        for page_id in page_ids_belonging_to_rid:
+            if (query_columns[page_id % self.num_columns] == 0): 
                 continue
-            record_display.append(self.base_pages[i].grab_slot(slot))
+            record_display.append(self.base_pages[page_id].grab_slot(slot))
 
         #Create temp record
         #Placeholder Talked w/ Alvin about this and still deciding on what design to go with. For now, will query data,
@@ -219,11 +240,11 @@ class Table:
 
             #Grab page locations from page_directory
             #Grab single page we care about from page locations
-            page_locations = self.page_directory[rid]
-            page_to_add = page_locations[col_index_to_add]
+            page_ids_belonging_to_rid = self.page_directory[rid]
+            page_to_add = page_ids_belonging_to_rid[col_index_to_add]
 
             #Get slot number from rid
-            slot = self.slot_num(rid)               
+            slot = self.calculate_slot_number(rid)               
             total = total + self.base_pages[page_to_add].grab_slot(slot)
 
         return total

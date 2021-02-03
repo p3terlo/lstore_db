@@ -5,64 +5,71 @@ class Page:
 
     def __init__(self):
         self.num_records = 0
-        self.data = bytearray(MEM_SIZE)
+        self.data = bytearray(PAGE_CAPACITY_IN_BYTES)
+
 
     def has_capacity(self):
-        pass
+        return self.num_records < int(PAGE_CAPACITY_IN_BYTES/INTEGER_CAPACITY_IN_BYTES)
+
 
     def is_full(self): #returns true if slots are filled
-        if self.num_records == MEM_SIZE/8:
-            return True
-        return False
-
+        return self.num_records == int(PAGE_CAPACITY_IN_BYTES/INTEGER_CAPACITY_IN_BYTES)
+           
+        
     def next_empty_slot(self):
         slot_num = self.num_records * 8
         return slot_num
       
+        
     def write(self, value):
-        val_to_bytes = value.to_bytes(8, 'big') #converting 64bit int to bytes
-        slot_num = self.num_records * 8
+        val_as_bytes = value.to_bytes(INTEGER_CAPACITY_IN_BYTES, 'big')
+        slot_num = self.num_records * INTEGER_CAPACITY_IN_BYTES
 
-        for i in range(8): #adding 64 bits into 8 bytes 
-            self.data[slot_num + i] = val_to_bytes[i]
+        if self.has_capacity():
+            for byte_index in range(INTEGER_CAPACITY_IN_BYTES):  
+                self.data[slot_num + byte_index] = val_as_bytes[byte_index]
+            self.num_records += 1
+        else:
+            raise IndexError("Out of Range!")
 
-        self.num_records += 1
-        pass
 
-    def byte_int_conver(self, byt): #conversion function for broken up bytes
+    @staticmethod
+    def broken_bytes_to_int(value): 
+        #conversion function for broken up bytes
         total = 0
-        for i in byt:
-            total = total * 256 + i
-        #print(total)
+        for byte in value:
+            total = total * 256 + byte
         return total
 
-    def display_mem(self): #displays internal memeory
+
+    def display_internal_memory(self):
 
         print("\nPage")
-        slot_val =[]
+        slot_val = []
             
-        for i in range(len(self.data)):
-            slot_val.append(self.data[i])
+        for bytearray_index in range(len(self.data)):
+            slot_val.append(self.data[bytearray_index])
             
-            if len(slot_val) == 8:
+            if len(slot_val) == INTEGER_CAPACITY_IN_BYTES:
                 print(slot_val, end=' = ')
-                print(self.byte_int_conver(slot_val))
+                print(self.broken_bytes_to_int(slot_val))
                 slot_val.clear()
+
                 
-    def get_size(self): #returns the maximum_size of a page for calculations
-        return MEM_SIZE
+    def get_page_capacity(self): 
+        return PAGE_CAPACITY_IN_BYTES
+
 
     def grab_slot(self, slot_num): #reading from memeory
         byte_val = []
-        for i in range(8):
-            byte_val.append(self.data[i + (slot_num * 8)])
+        for byte_i in range(INTEGER_CAPACITY_IN_BYTES):
+            byte_val.append(self.data[byte_i + (slot_num * INTEGER_CAPACITY_IN_BYTES)])
 
-        val = self.byte_int_conver(byte_val)
-        return val
-
-
-
-    def update(self, value, slot):
+        integer = self.broken_bytes_to_int(byte_val)
+        return integer
+      
+      
+     def update(self, value, slot):
         slot_num = slot * 8
         if(value != None):
             # print("Value to update", value, "slot", slot_num)
@@ -72,3 +79,4 @@ class Page:
                 self.data[slot_num + i] = val_to_bytes[i]
 
         pass
+      

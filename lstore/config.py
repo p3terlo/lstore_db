@@ -1,4 +1,6 @@
 # Global Setting for the Database
 # PageSize, StartRID, etc..
+
 PAGE_RANGE = 2000
-MEM_SIZE = 24
+PAGE_CAPACITY_IN_BYTES = 32 
+INTEGER_CAPACITY_IN_BYTES = 8

@@ -35,6 +35,7 @@ for key in records:
         # print('select on', key, ':', record)
         tempVar = 0
 
+
 for key in records:
     updated_columns = [None, None, None, None, None]
     for i in range(1, grades_table.num_columns):

@@ -30,7 +30,6 @@ class Query:
     def insert(self, *columns):
         schema_encoding = '0' * self.table.num_columns
         self.table.add(*columns)
-        pass
 
     """
     # Read a record with specified key
@@ -43,7 +42,6 @@ class Query:
     def select(self, key, column, query_columns):
         selectedObject = self.table.select(key, column, query_columns)
         return selectedObject
-        pass
 
     """
     # Update a record with specified key and columns
@@ -52,7 +50,7 @@ class Query:
     """
     def update(self, key, *columns):
         self.table.update(key, *columns)
-        pass
+
 
     """
     :param start_range: int         # Start of the key range to aggregate 
@@ -65,7 +63,7 @@ class Query:
     def sum(self, start_range, end_range, aggregate_column_index):
         total = self.table.sum(start_range, end_range, aggregate_column_index)
         return total
-        pass
+
 
     """
     incremenets one column of the record

@@ -3,6 +3,7 @@ from lstore.table import Table
 class Database():
 
     def __init__(self):
+
         self.tables = {}
 
     def open(self, path):
@@ -29,6 +30,7 @@ class Database():
     # Deletes the specified table
     """
     def drop_table(self, name):
+
         try:
             self.tables.pop(name)
         except KeyError:
@@ -43,3 +45,4 @@ class Database():
             return table
         except KeyError:
             print("get_table Error: No table exists with name %s" % (name))
+
