@@ -15,7 +15,9 @@ records = {}
 
 seed(3562901)
 
-for i in range(0, 1000):
+for i in range(0, 60):
+# for i in range(0, 3):
+
     key = 92106429 + randint(0, 9000)
     while key in records:
         key = 92106429 + randint(0, 9000)
@@ -31,6 +33,7 @@ for key in records:
             error = True
     if error:
         print('select error on', key, ':', record, ', correct:', records[key])
+        tempVar = 0
     else:
         # print('select on', key, ':', record)
         tempVar = 0
@@ -50,7 +53,9 @@ for key in records:
             if column != records[key][j]:
                 error = True
         if error:
+            print(record.columns, "vs", records[key])
             print('update error on', original, 'and', updated_columns, ':', record, ', correct:', records[key])
+            tempVar = 0
         else:
             # print('update on', original, 'and', updated_columns, ':', record)
             tempvar = 0
