@@ -119,8 +119,6 @@ class TestIndex(unittest.TestCase):
         # One index_for_table for each table. All our empty initially.
         self.assertTrue(type(self.index_for_table.indices[KEY_COLUMN]), BTrees.IOBTree.IOBTree)
         
-        print(self.index_for_table.indices)
-
         number_of_records_inserted = DATA.__len__()
         number_of_records_in_key_column_index = self.index_for_table.indices[KEY_COLUMN].__len__()
 
@@ -128,7 +126,7 @@ class TestIndex(unittest.TestCase):
 
     def test_locate(self):
         record_key = 92110441
-        record_RID = 37
+        record_RID = [37]
         record_not_existing = 5045
 
         self.assertEqual(record_RID, self.index_for_table.locate(column=KEY_COLUMN, value=record_key))
@@ -140,6 +138,8 @@ class TestIndex(unittest.TestCase):
         max_key = 92115022
 
         RID_LIST = [35, 78, 83, 58, 5, 44, 60, 65, 63, 9, 3, 82, 69, 20, 84, 28, 12, 57, 31]
+        RID_LIST.sort()
+
         self.assertEqual(RID_LIST, self.index_for_table.locate_range(begin=min_key, end=max_key, column=KEY_COLUMN))
 
 
@@ -159,3 +159,50 @@ class TestIndex(unittest.TestCase):
         self.index_for_table.drop_index(column_number=KEY_COLUMN)
         self.assertEqual(None, self.index_for_table.indices[KEY_COLUMN])
         
+
+    def test_insert_multiple_values_for_single_key(self):
+        key = 5
+        value = 14
+        value_2 = 20
+        value_3 = 50
+
+        self.index_for_table.insert(1, value)
+        self.index_for_table.insert(1, value_2)
+        self.index_for_table.insert(1, value_3)
+
+
+    def test_locate_multiple_values_for_single_key(self):
+        key = 5
+        value = 14
+        value_2 = 50
+        value_3 = 20
+
+        sorted_values = [14, 20, 50]
+
+        self.index_for_table.insert(1, value)
+        self.index_for_table.insert(1, value_2)
+        self.index_for_table.insert(1, value_3)
+
+        self.assertEqual(sorted_values, self.index_for_table.locate(column=0, value=1))
+
+
+    def test_locate_range_multiple_values_for_single_key(self):
+        key = 5
+        value = 14
+        value_2 = 20
+        value_3 = 50
+
+        sorted_values = [14, 20, 43, 50, 243, 443]
+
+        self.index_for_table.insert(1, value)
+        self.index_for_table.insert(1, value_2)
+        self.index_for_table.insert(1, value_3)
+        self.index_for_table.insert(2, 43)
+        self.index_for_table.insert(3, 443)
+        self.index_for_table.insert(5, 243)
+
+        self.assertEqual(sorted_values, self.index_for_table.locate_range(begin=1, end=5, column=0))
+
+
+    
+    
