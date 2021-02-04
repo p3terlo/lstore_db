@@ -316,3 +316,18 @@ class Table:
             total = total + self.base_pages[page_to_add].grab_slot(slot)
 
         return total
+   
+    def delete(self, key):
+               
+           #select the base record rid according to the key
+           record = self.key_map[key]
+           rid = record.rid
+
+           #invalidation: return true upon successful deletion and return false otherwise if record doesn't exist or is locked
+           if record is not False or rid is not False:
+               # set the rid of the base page and tail pages to a special value that is no longer accessible
+               record.rid = None
+               # NEEDS REVISION: also set the tail pages rid to a special value
+               return True
+           else:
+               return False
