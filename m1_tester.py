@@ -67,3 +67,26 @@ for c in range(0, grades_table.num_columns):
         else:
             # print('sum on [', keys[r[0]], ',', keys[r[1]], ']: ', column_sum)
             tempVar = 0
+           
+for key in records:
+    
+    query.delete(key)
+    error = False
+    
+    # NEEDS REVISION: best way to check if delete is successful
+
+    # Option 1: check if select fails, means delete is successful, cant track record with rid
+    # if query.select(key, 0, [1,1,1,1,1])[0]:
+    #     error = True
+
+    # Option 2: check if the rid in records are successsfully set to None
+    # for k, per_rid in enumerate(record.rid):
+    #     if per_rid != None:
+    #          error = True
+
+    if error:
+        print('delete error on', key)
+        print()
+    else:
+        print('delete on', key)
+        print()
