@@ -20,7 +20,8 @@ class Query:
     # Return False if record doesn't exist or is locked due to 2PL
     """
     def delete(self, key):
-        pass
+        deleteCheck = self.table.delete(key)
+        return deleteCheck
 
     """
     # Insert a record with specified columns
