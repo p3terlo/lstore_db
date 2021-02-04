@@ -39,6 +39,9 @@ class Table:
         self.tail_pages = []
 
         self.tail_rid = MAX_INT
+        
+        #RID
+        # self.rid = rid
 
 
     def __merge(self):
@@ -107,7 +110,9 @@ class Table:
 
     def create_tail_pages(self):
         num_tail_pages = len(self.tail_pages)
-        num_records = len(self.key_map) - 1
+        # num_records = len(self.key_map) - 1
+        num_records = len(self.page_directory) - 1
+
         
 
         noTailPagesInTable = num_tail_pages == 0
@@ -129,7 +134,8 @@ class Table:
         self.create_tail_pages()
 
         # Create record
-        rid = len(self.key_map) + 1
+        # rid = len(self.key_map) + 1
+        rid = len(self.page_directory) + 1
         record_key = columns[self.key]
         milliseconds = int(round(time.time() * 1000))
         schema = 0
@@ -144,6 +150,8 @@ class Table:
         
         # Key -> record -> RID
         self.key_map[record_key] = base_record
+        self.index.insert(record_key, base_record)
+
 
         page_dict = self.calculate_base_page_numbers(self.num_columns + NUM_DEFAULT_COLUMNS, rid)
         slot_num = page_dict[SLOT_NUM_COL]
@@ -161,7 +169,9 @@ class Table:
 
         print("fetching record.....")
         
-        record = self.key_map[key]
+        # record = self.key_map[key]
+        record = self.index.locate(column = 0, value = key)[0]
+
 
         #record.display()
         rid = record.rid
@@ -187,8 +197,9 @@ class Table:
       
     def select(self, key, column, query_columns):
 
-        #Get rid from key_map
-        record = self.key_map[key]
+        # record = self.key_map[key]
+        record = self.index.locate(column = 0, value = key)[0]
+
         rid = record.rid
 
         #Gather page locations from page_directory
@@ -280,8 +291,10 @@ class Table:
         new_record = Record(new_rid, key, new_record_col)
 
         # Update indirection columns
-        base_record = self.key_map[key]
+        # base_record = self.key_map[key]
+        base_record = self.index.locate(column = 0, value = key)[0]
         latest_record = base_record.columns[INDIRECTION_COLUMN]
+
         # If base record had previous updates
         if latest_record != NULL_PTR:
             # Point new record's indirection to previous most recent record
@@ -355,9 +368,9 @@ class Table:
             if key < start_range or key > end_range:
                 continue
 
-            #Grab record from key_map
-            #Grab rid from record object
-            record = self.key_map[key]
+            # record = self.key_map[key]
+            record = self.index.locate(column = 0, value = key)[0]
+
             rid = record.rid
 
             #Grab page locations from page_directory
@@ -393,7 +406,9 @@ class Table:
 
     def delete(self, key):
         try:
-            record = self.key_map[key]
+            # record = self.key_map[key]
+            record = self.index.locate(column = 0, value = key)[0]
+
             record.rid = None
             return True
         except:
