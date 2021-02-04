@@ -181,38 +181,46 @@ class Table:
         #Gather page locations from page_directory
         page_location = self.page_directory[rid]
 
-        #record_display: Array to hold record data
-        #slot: slot within page
+        base_record = []
+        record_display = []
 
-        record_display = [] #[91469300,1,2,3,4]
         slot = page_location[SLOT_NUM_COL]
-
-        #Only grab queried records from pages EX: [1,1,1,1,1]
-        for page_id in page_ids_belonging_to_rid:
-            if (query_columns[page_id % self.num_columns] == 0): 
-                continue
-            record_display.append(self.base_pages[page_id].grab_slot(slot))
-
-        record = Record(0,0,[])
         start_page = page_location[PAGE_NUM_COL]
+        first_column_page = start_page + NUM_DEFAULT_COLUMNS
+        last_page = start_page + NUM_DEFAULT_COLUMNS + self.num_columns
         indirection = self.base_pages[start_page + INDIRECTION_COLUMN].grab_slot(slot)
 
+        tail_update_index = []
+
+        # Pull entire base record
+        for page in range(start_page, last_page):
+            base_record.append(self.base_pages[start_page + page].grab_slot(slot))
+
+        # For base records with no updates, take subset of base_record
+        if (indirection == NULL_PTR):
+            for page in range(NUM_DEFAULT_COLUMNS, self.num_columns + NUM_DEFAULT_COLUMNS):
+                if (query_columns[page - NUM_DEFAULT_COLUMNS] == 1):
+                    record_display.append(base_record[page])
+
         # If record has updates, go to most recent update
-        # if (indirection != NULL_PTR)
-
-
-
-
-        if indirection == NULL:
-            # Base records don't have schema encoding, therefore 1 less page than tail records
-            end_page = page_location[PAGE_NUM_COL] + self.num_columns + TIMESTAMP_COLUMN
-
-            for page in range(start_page + TIMESTAMP_COLUMN, end_page):
-                record_display.append(self.base_pages[page].grab_slot(slot))
-
-        # If tail record 
         else:
-            tail_location = page_directory[indirection]
+            page_location = self.page_directory[indirection]
+            start_page = page_location[PAGE_NUM_COL]
+            slot_num = page_location[SLOT_NUM_COL]
+            
+            schema = self.tail_pages[start_page + SCHEMA_ENCODING_COLUMN].grab_slot(slot_num)
+            schema = str(schema)
+
+            for i in range(len(schema)):
+                if schema[i] == "1":
+                    tail_update_index.append(self.num_columns - (len(schema) - i))
+
+            for page in tail_update_index:
+                base_record[NUM_DEFAULT_COLUMNS + page] = self.tail_pages[start_page + NUM_DEFAULT_COLUMNS + page].grab_slot(slot_num)
+
+            for page in range(NUM_DEFAULT_COLUMNS, self.num_columns + NUM_DEFAULT_COLUMNS):
+                if (query_columns[page - NUM_DEFAULT_COLUMNS] == 1):
+                    record_display.append(base_record[page])
 
         #Create temp record
         #Placeholder Talked w/ Alvin about this and still deciding on what design to go with. For now, will query data,
@@ -230,6 +238,7 @@ class Table:
 
         # Create new record
         new_rid = self.tail_rid
+        print(f"new rid: {new_rid}")
         new_time = int(round(time.time() * 1000))
         schema = ""
         for column in columns:
@@ -259,6 +268,10 @@ class Table:
             new_record_col[INDIRECTION_COLUMN] = base_record.rid
 
         # Set base record's indirection column to new record's RID
+        base_page_location = self.page_directory[base_record.rid]
+        base_page_num = base_page_location[PAGE_NUM_COL]
+        base_page_slot = base_page_location[SLOT_NUM_COL]
+        self.base_pages[base_page_num + INDIRECTION_COLUMN].update(new_rid, base_page_slot)
         base_record.columns[INDIRECTION_COLUMN] = new_rid
 
         # Write new record to tail page
