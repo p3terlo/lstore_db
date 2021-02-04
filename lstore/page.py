@@ -72,7 +72,7 @@ class Page:
         return integer
       
       
-     def update(self, value, slot):
+    def update(self, value, slot):
         slot_num = slot * 8
         if(value != None):
             # print("Value to update", value, "slot", slot_num)
