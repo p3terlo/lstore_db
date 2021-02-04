@@ -17,7 +17,12 @@ class Index:
 
     def locate(self, column=0, value=None):
         if self.indices[column] is not None:
-            return self.indices[column].get(value)
+            located_value = self.indices[column].get(value)
+            isNotList = not isinstance(located_value, list)
+
+            if isNotList and located_value is not None:
+                located_value = [located_value]
+            return located_value
 
     """
     # Returns the RIDs of all records with values in column "column" between "begin" and "end"
@@ -25,7 +30,19 @@ class Index:
 
     def locate_range(self, begin, end, column=0):
         if self.indices[column] is not None:
-            return list(self.indices[column].values(begin, end))
+            located_values = list(self.indices[column].values(begin, end))
+            values_to_delist = []
+            
+            for index, value in enumerate(located_values):
+                if isinstance(value, list):
+                    for val in value:
+                        values_to_delist.append(val)
+            
+            located_values = [value for value in located_values if not isinstance(value, list)]
+            located_values = located_values + values_to_delist
+            located_values.sort()
+            
+            return located_values
 
     """
     # optional: Create index on specific column
@@ -46,5 +63,26 @@ class Index:
     def drop_index(self, column_number=0):
         self.indices[column_number].clear()
         self.indices[column_number] = None
+
+
+    def insert(self, key, value, column=0):
+
+        valueNeedsToBeList = self.indices[column].has_key(key)
+
+        if valueNeedsToBeList:
+            popped_value = self.indices[column].pop(key)
+            valueAlreadyList = isinstance(popped_value, list)
+
+            if valueAlreadyList:
+                value_list = [*popped_value, value]
+            else:
+                value_list = [popped_value, value]
+
+            value_list.sort()
+            
+            self.indices[column].insert(key, value_list)
+        else: 
+            self.indices[column].insert(key, value)
+
     
 
