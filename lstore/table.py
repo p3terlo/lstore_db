@@ -3,8 +3,6 @@ from lstore.config import *
 from lstore.index import Index
 import time
 
-tail_rid = MAX_INT
-
 class Record:
 
     def __init__(self, rid, key, columns):
@@ -39,6 +37,8 @@ class Table:
         self.key_map = {}
         self.base_pages = []
         self.tail_pages = []
+
+        self.tail_rid = MAX_INT
 
 
     def __merge(self):
@@ -195,9 +195,14 @@ class Table:
 
         record = Record(0,0,[])
         start_page = page_location[PAGE_NUM_COL]
-
-        # If base record
         indirection = self.base_pages[start_page + INDIRECTION_COLUMN].grab_slot(slot)
+
+        # If record has updates, go to most recent update
+        # if (indirection != NULL_PTR)
+
+
+
+
         if indirection == NULL:
             # Base records don't have schema encoding, therefore 1 less page than tail records
             end_page = page_location[PAGE_NUM_COL] + self.num_columns + TIMESTAMP_COLUMN
@@ -224,7 +229,7 @@ class Table:
         self.create_tail_pages() 
 
         # Create new record
-        global tail_rid
+        new_rid = self.tail_rid
         new_time = int(round(time.time() * 1000))
         schema = ""
         for column in columns:
@@ -234,12 +239,12 @@ class Table:
                 schema += "1"
         schema = int(schema)
 
-        new_record_col = [tail_rid, NULL_PTR, new_time, schema]
+        new_record_col = [new_rid, NULL_PTR, new_time, schema]
 
         for column in columns:
             new_record_col.append(column)
 
-        new_record = Record(tail_rid, key, new_record_col)
+        new_record = Record(new_rid, key, new_record_col)
 
         # Update indirection columns
         base_record = self.key_map[key]
@@ -254,10 +259,10 @@ class Table:
             new_record_col[INDIRECTION_COLUMN] = base_record.rid
 
         # Set base record's indirection column to new record's RID
-        base_record.columns[INDIRECTION_COLUMN] = tail_rid
+        base_record.columns[INDIRECTION_COLUMN] = new_rid
 
         # Write new record to tail page
-        page_dict = self.calculate_tail_page_numbers(self.num_columns + NUM_DEFAULT_COLUMNS, tail_rid)
+        page_dict = self.calculate_tail_page_numbers(self.num_columns + NUM_DEFAULT_COLUMNS, new_rid)
         page_range_num = page_dict[PAGE_RANGE_COL]
         page_num = page_dict[PAGE_NUM_COL]
         slot_num = page_dict[SLOT_NUM_COL]
@@ -270,10 +275,10 @@ class Table:
 
         # Update page directory
         directory = [page_range_num, page_num, slot_num]
-        self.page_directory[tail_rid] = directory
+        self.page_directory[new_rid] = directory
 
-        # Decrement global tail rid
-        tail_rid -= 1
+        # Decrement tail rid
+        self.tail_rid -= 1
 
 
     def sum(self, start_range, end_range, col_index_to_add):
