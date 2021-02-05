@@ -8,12 +8,12 @@ from lstore.config import PAGE_CAPACITY_IN_BYTES, INTEGER_CAPACITY_IN_BYTES, PAG
 class TestTable(unittest.TestCase):
 
     
-    def setUp(self) -> None:
-        self.table = Table(name="Grades", num_columns=5, key=0)
+    # def setUp(self) -> None:
+    #     self.table = Table(name="Grades", num_columns=5, key=0)
 
-        print(f"Page Range: {PAGE_RANGE} Records")
-        print(f"Page Capacity: {PAGE_CAPACITY_IN_BYTES} Bytes")
-        print(f"Integer Capacity: {INTEGER_CAPACITY_IN_BYTES} Bytes")
+    #     print(f"Page Range: {PAGE_RANGE} Records")
+    #     print(f"Page Capacity: {PAGE_CAPACITY_IN_BYTES} Bytes")
+    #     print(f"Integer Capacity: {INTEGER_CAPACITY_IN_BYTES} Bytes")
 
 
     # def test_rid_to_slot_id_and_starting_page_id(self):
@@ -27,21 +27,21 @@ class TestTable(unittest.TestCase):
     #     print(output["starting_page_id"])
 
 
-    def test_select(self):
-        self.table.add(*[92106420, 5, 12, 2, 10])
-        self.table.update(92106420, *[None, None, None, None, 20])
-        self.table.update(92106420, *[None, None, None, 19, 20])
+    # def test_select(self):
+    #     self.table.add(*[92106420, 5, 12, 2, 10])
+    #     self.table.update(92106420, *[None, None, None, None, 20])
+    #     self.table.update(92106420, *[None, None, None, 18, None])
 
-        print("Printing base pages")
-        for base_page in self.table.base_pages:
-            base_page.display_internal_memory()
+    #     print("Printing base pages")
+    #     for base_page in self.table.base_pages:
+    #         base_page.display_internal_memory()
 
-        print("Printing tail pages")
-        for tail_page in self.table.tail_pages:
-            tail_page.display_internal_memory()
+    #     print("Printing tail pages")
+    #     for tail_page in self.table.tail_pages:
+    #         tail_page.display_internal_memory()
         
-        select = self.table.select(92106420, 0, [1, 0, 0, 1, 1])
-        print(select)
+    #     select = self.table.select(92106420, 0, [1, 0, 0, 1, 1])
+    #     print(select)
 
     # def test_add(self):
     #     self.table.add(*[92106420, 5, 12, 2, 10])
@@ -51,7 +51,7 @@ class TestTable(unittest.TestCase):
     #     self.table.add(*[92106424, 9, 12, 2, 14])
 
     #     self.table.update(92106420, *[None, None, None, None, 20])
-    #     self.table.update(92106420, *[None, None, None, 19, 20])
+    #     self.table.update(92106420, *[None, None, None, 19, None])
         
     #     print("Printing base pages")
     #     for base_page in self.table.base_pages:

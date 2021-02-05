@@ -34,7 +34,6 @@ class Table:
         self.index = Index(self)
 
         # Added structures
-        # self.key_map = {}
         self.base_pages = []
         self.tail_pages = []
 
@@ -76,10 +75,12 @@ class Table:
         slots_per_page = int(PAGE_CAPACITY_IN_BYTES / INTEGER_CAPACITY_IN_BYTES)
         output[SLOT_NUM_COL] = (MAX_INT - rid) % slots_per_page
 
-        page_offset = int((MAX_INT - rid) / PAGE_RANGE) 
+        # page_offset = int((MAX_INT - rid) / PAGE_RANGE)
+        page_offset = int((MAX_INT - rid) / slots_per_page) 
         output[PAGE_NUM_COL] = num_columns * page_offset
 
-        output[PAGE_RANGE_COL] = page_offset
+        # output[PAGE_RANGE_COL] = page_offset
+        output[PAGE_RANGE_COL] = int((MAX_INT - rid) / PAGE_RANGE)
 
         return output
 
@@ -105,7 +106,10 @@ class Table:
         noTailPagesInTable = num_tail_pages == 0
         records_covered = (num_tail_pages / self.num_columns) * PAGE_RANGE
 
-        if ((noTailPagesInTable) or (num_records > records_covered)):
+        if not noTailPagesInTable:
+            tail_pages_full = self.base_pages[-1].is_full()
+
+        if ((noTailPagesInTable) or (num_records > records_covered) or (tail_pages_full)):
             for _ in range(self.num_columns + NUM_DEFAULT_COLUMNS):
                 new_tail_page = Page()
                 self.tail_pages.append(new_tail_page)
@@ -211,10 +215,11 @@ class Table:
         temp_record = Record(rid, key, record_display)
         return_array.append(temp_record)
         
+        print(f"Record display: {record_display}")
+
         return return_array
 
 
-    # Implemented with tail page and page range
     def update(self, key, *columns):
         self.create_tail_pages() 
 
@@ -244,6 +249,36 @@ class Table:
         if latest_record != NULL_PTR:
             # Point new record's indirection to previous most recent record
             new_record_col[INDIRECTION_COLUMN] = latest_record
+
+            # Update schema of new record according to new data and previous tail record's schema
+            prevUpdatePages = self.page_directory[latest_record]
+            first_schema = new_record_col[SCHEMA_ENCODING_COLUMN]
+            prev_schema = self.tail_pages[prevUpdatePages[PAGE_NUM_COL] + SCHEMA_ENCODING_COLUMN].grab_slot(prevUpdatePages[SLOT_NUM_COL])
+
+            first_schema_string = "00000" + str(first_schema)
+            first_schema_string = first_schema_string[-5:]
+            prev_schema_string = "00000" + str(prev_schema)
+            prev_schema_string = prev_schema_string[-5:]
+
+            new_schema_string = ""
+
+            for i in range(5):
+                if first_schema_string[i] == "1" or prev_schema_string[i] == "1":
+                    new_schema_string += "1"
+
+                else: 
+                    new_schema_string += "0"
+
+            schemaTemp = str(new_record_col[SCHEMA_ENCODING_COLUMN])
+            schemaTemp = "00000" + schemaTemp
+            schemaTemp = schemaTemp[-5:]
+
+            for i in range(len(prev_schema_string)):
+                if prev_schema_string[i] == "1" and first_schema_string[i] != "1":
+                    new_record_col[NUM_DEFAULT_COLUMNS+i] = self.tail_pages[prevUpdatePages[PAGE_NUM_COL]+NUM_DEFAULT_COLUMNS+i].grab_slot(prevUpdatePages[SLOT_NUM_COL])
+                    
+            new_record_col[SCHEMA_ENCODING_COLUMN] = int(new_schema_string)
+
         # If base record had no updates
         else:
             # Point new record's indirection to base record 
@@ -279,12 +314,9 @@ class Table:
     def sum(self, start_range, end_range, col_index_to_add):
         total = 0
 
-        # FIXME No longer have key map, need to implement different check
-        for key in self.key_map:
-            if key < start_range or key > end_range:
-                continue
+        record_list = self.index.locate_range(start_range, end_range, column = 0)
 
-            record = self.index.locate(column = 0, value = key)[0]
+        for record in record_list:
 
             rid = record.rid
 
@@ -313,14 +345,9 @@ class Table:
 
    
     def delete(self, key):
-           record = self.index.locate(column = 0, value = key)[0]
-           rid = record.rid
-
-           #invalidation: return true upon successful deletion and return false otherwise if record doesn't exist or is locked
-           if record is not False or rid is not False:
-               # set the rid of the base page and tail pages to a special value that is no longer accessible
-               record.rid = None
-               # NEEDS REVISION: also set the tail pages rid to a special value
-               return True
-           else:
-               return False
+        try:
+            record = self.index.locate(column = 0, value = key)[0]
+            record.rid = None
+            return True
+        except:
+            return False
