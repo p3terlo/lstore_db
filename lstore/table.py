@@ -364,12 +364,16 @@ class Table:
     def sum(self, start_range, end_range, col_index_to_add):
         total = 0
 
-        for key in self.key_map:
-            if key < start_range or key > end_range:
-                continue
+        record_list = self.index.locate_range(start_range, end_range, column = 0)
+
+        for record in record_list:
+
+        # for key in self.key_map:
+        #     if key < start_range or key > end_range:
+        #         continue
 
             # record = self.key_map[key]
-            record = self.index.locate(column = 0, value = key)[0]
+            # record = self.index.locate(column = 0, value = key)[0]
 
             rid = record.rid
 
@@ -381,7 +385,6 @@ class Table:
             indirection = self.base_pages[pages[PAGE_NUM_COL]+INDIRECTION_COLUMN].grab_slot(pages[SLOT_NUM_COL])
             # print(indirection)
             if indirection != NULL_PTR:
-                # print("going into if")
                 pages_tail = self.page_directory[indirection]
 
                 schema = self.tail_pages[pages_tail[PAGE_NUM_COL]+SCHEMA_ENCODING_COLUMN].grab_slot(pages_tail[SLOT_NUM_COL])
@@ -391,18 +394,15 @@ class Table:
                 if schema_string[col_index_to_add] == "1":
                     val_to_add = self.tail_pages[pages_tail[PAGE_NUM_COL] + NUM_DEFAULT_COLUMNS + col_index_to_add].grab_slot(pages_tail[SLOT_NUM_COL])
                     total = total + val_to_add
-                    # print(total)
                 else:
                     total = total + self.base_pages[pages[PAGE_NUM_COL] + NUM_DEFAULT_COLUMNS + col_index_to_add].grab_slot(pages[SLOT_NUM_COL])
             else:
                 total = total + self.base_pages[pages[PAGE_NUM_COL] + NUM_DEFAULT_COLUMNS + col_index_to_add].grab_slot(pages[SLOT_NUM_COL])
-                # print("going into else")
-
-            # page_to_add = pages[col_index_to_add]
-            # slot = self.calculate_slot_number(rid)               
-            # total = total + self.base_pages[page_to_add].grab_slot(slot)
 
         return total
+
+
+
 
     def delete(self, key):
         try:

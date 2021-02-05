@@ -40,7 +40,7 @@ class Index:
             
             located_values = [value for value in located_values if not isinstance(value, list)]
             located_values = located_values + values_to_delist
-            located_values.sort()
+            # located_values.sort()
             
             return located_values
 
