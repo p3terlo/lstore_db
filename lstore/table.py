@@ -34,10 +34,11 @@ class Table:
         self.index = Index(self)
 
         # Added structures
-        self.key_map = {}
+        # self.key_map = {}
         self.base_pages = []
         self.tail_pages = []
 
+        self.base_rid = 1
         self.tail_rid = MAX_INT
 
 
@@ -99,7 +100,7 @@ class Table:
 
     def create_tail_pages(self):
         num_tail_pages = len(self.tail_pages)
-        num_records = len(self.key_map) - 1
+        num_records = self.base_rid - 1
 
         noTailPagesInTable = num_tail_pages == 0
         records_covered = (num_tail_pages / self.num_columns) * PAGE_RANGE
@@ -116,7 +117,7 @@ class Table:
         self.create_tail_pages()
 
         # Create record
-        rid = len(self.key_map) + 1
+        rid = self.base_rid
         record_key = columns[self.key]
         milliseconds = int(round(time.time() * 1000))
         schema = 0
@@ -129,42 +130,25 @@ class Table:
 
         base_record = Record(rid, record_key, record_col)
         
-        # Key -> record -> RID
-        self.key_map[record_key] = base_record
+        # Insert record in index
+        self.index.insert(record_key, base_record)
 
+        # Calculate page numbers for writing to memory
         page_dict = self.calculate_base_page_numbers(self.num_columns + NUM_DEFAULT_COLUMNS, rid)
         slot_num = page_dict[SLOT_NUM_COL]
         starting_page_num = page_dict[PAGE_NUM_COL]
         page_range_num = page_dict[PAGE_RANGE_COL]
         
+        # Write record to base pages
         for i in range(len(record_col)):
             self.base_pages[starting_page_num + i].write(record_col[i])
 
+        # Update page directory
         directory = [page_range_num, starting_page_num, slot_num]
         self.page_directory[rid] = directory
 
-        
-    def fetch(self, key):
-
-        print("fetching record.....")
-        
-        record = self.key_map[key]
-
-        #record.display()
-        rid = record.rid
-
-        page_locations = self.page_directory[rid]
-        page_ids_belonging_to_rid = self.page_directory[rid]
-  
-        record_display = []
-
-        slot_id = self.calculate_slot_number(rid)
-
-        for page_id in page_ids_belonging_to_rid:
-            record_display.append(self.base_pages[page_id].grab_slot(slot_id))
-
-        print(record_display)
-        print()
+        # Increment base record RID
+        self.base_rid += 1
 
         
     def display_pages(self):
@@ -173,9 +157,7 @@ class Table:
             
       
     def select(self, key, column, query_columns):
-
-        #Get rid from key_map
-        record = self.key_map[key]
+        record = self.index.locate(column = 0, value = key)[0]
         rid = record.rid
 
         #Gather page locations from page_directory
@@ -238,7 +220,6 @@ class Table:
 
         # Create new record
         new_rid = self.tail_rid
-        print(f"new rid: {new_rid}")
         new_time = int(round(time.time() * 1000))
         schema = ""
         for column in columns:
@@ -256,8 +237,9 @@ class Table:
         new_record = Record(new_rid, key, new_record_col)
 
         # Update indirection columns
-        base_record = self.key_map[key]
+        base_record = self.index.locate(column = 0, value = key)[0]
         latest_record = base_record.columns[INDIRECTION_COLUMN]
+
         # If base record had previous updates
         if latest_record != NULL_PTR:
             # Point new record's indirection to previous most recent record
@@ -297,30 +279,41 @@ class Table:
     def sum(self, start_range, end_range, col_index_to_add):
         total = 0
 
+        # FIXME No longer have key map, need to implement different check
         for key in self.key_map:
             if key < start_range or key > end_range:
                 continue
 
-            #Grab record from key_map
-            #Grab rid from record object
-            record = self.key_map[key]
+            record = self.index.locate(column = 0, value = key)[0]
+
             rid = record.rid
 
             #Grab page locations from page_directory
             #Grab single page we care about from page locations
-            page_ids_belonging_to_rid = self.page_directory[rid]
-            page_to_add = page_ids_belonging_to_rid[col_index_to_add]
+            pages = self.page_directory[rid]
 
-            #Get slot number from rid
-            slot = self.calculate_slot_number(rid)               
-            total = total + self.base_pages[page_to_add].grab_slot(slot)
+            indirection = self.base_pages[pages[PAGE_NUM_COL]+INDIRECTION_COLUMN].grab_slot(pages[SLOT_NUM_COL])
+
+            if indirection != NULL_PTR:
+                pages_tail = self.page_directory[indirection]
+
+                schema = self.tail_pages[pages_tail[PAGE_NUM_COL]+SCHEMA_ENCODING_COLUMN].grab_slot(pages_tail[SLOT_NUM_COL])
+                schema_string = "00000" + str(schema)
+                schema_string = schema_string[-5:]
+
+                if schema_string[col_index_to_add] == "1":
+                    val_to_add = self.tail_pages[pages_tail[PAGE_NUM_COL] + NUM_DEFAULT_COLUMNS + col_index_to_add].grab_slot(pages_tail[SLOT_NUM_COL])
+                    total = total + val_to_add
+                else:
+                    total = total + self.base_pages[pages[PAGE_NUM_COL] + NUM_DEFAULT_COLUMNS + col_index_to_add].grab_slot(pages[SLOT_NUM_COL])
+            else:
+                total = total + self.base_pages[pages[PAGE_NUM_COL] + NUM_DEFAULT_COLUMNS + col_index_to_add].grab_slot(pages[SLOT_NUM_COL])
 
         return total
+
    
     def delete(self, key):
-               
-           #select the base record rid according to the key
-           record = self.key_map[key]
+           record = self.index.locate(column = 0, value = key)[0]
            rid = record.rid
 
            #invalidation: return true upon successful deletion and return false otherwise if record doesn't exist or is locked
