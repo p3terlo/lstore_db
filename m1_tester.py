@@ -15,15 +15,14 @@ records = {}
 
 seed(3562901)
 
-for i in range(0, 60):
-# for i in range(0, 3):
-
+for i in range(0, 1000):
     key = 92106429 + randint(0, 9000)
     while key in records:
         key = 92106429 + randint(0, 9000)
     records[key] = [key, randint(0, 20), randint(0, 20), randint(0, 20), randint(0, 20)]
     query.insert(*records[key])
     print('inserted', records[key])
+
 
 for key in records:
     record = query.select(key, 0, [1, 1, 1, 1, 1])[0]
@@ -35,7 +34,7 @@ for key in records:
         print('select error on', key, ':', record, ', correct:', records[key])
         tempVar = 0
     else:
-        # print('select on', key, ':', record)
+        print('select on', key, ':', record)
         tempVar = 0
 
 
@@ -57,7 +56,7 @@ for key in records:
             print('update error on', original, 'and', updated_columns, ':', record, ', correct:', records[key])
             tempVar = 0
         else:
-            # print('update on', original, 'and', updated_columns, ':', record)
+            print('update on', original, 'and', updated_columns, ':', record)
             tempvar = 0
         updated_columns[i] = None
 
@@ -70,5 +69,6 @@ for c in range(0, grades_table.num_columns):
         if column_sum != result:
             print('sum error on [', keys[r[0]], ',', keys[r[1]], ']: ', result, ', correct: ', column_sum)
         else:
-            # print('sum on [', keys[r[0]], ',', keys[r[1]], ']: ', column_sum)
+            print('sum on [', keys[r[0]], ',', keys[r[1]], ']: ', column_sum)
             tempVar = 0
+            

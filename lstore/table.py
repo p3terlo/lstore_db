@@ -42,7 +42,7 @@ class Table:
         
         #RID
         # self.rid = rid
-
+        
 
     def __merge(self):
         pass
@@ -119,7 +119,7 @@ class Table:
         records_covered = (num_tail_pages / self.num_columns) * PAGE_RANGE
 
         if not noTailPagesInTable:
-            tail_pages_full = self.base_pages[-1].is_full()
+            tail_pages_full = self.tail_pages[-1].is_full()
 
 
         if ((noTailPagesInTable) or (num_records > records_covered) or (tail_pages_full)):
@@ -149,7 +149,6 @@ class Table:
         base_record = Record(rid, record_key, record_col)
         
         # Key -> record -> RID
-        self.key_map[record_key] = base_record
         self.index.insert(record_key, base_record)
 
 
@@ -293,6 +292,9 @@ class Table:
         # Update indirection columns
         # base_record = self.key_map[key]
         base_record = self.index.locate(column = 0, value = key)[0]
+        if base_record == -1:
+            return False
+
         latest_record = base_record.columns[INDIRECTION_COLUMN]
 
         # If base record had previous updates
@@ -348,7 +350,6 @@ class Table:
 
         for i in range(len(new_record_col)):
             if (new_record_col[i] != None):
-                # print("slot_num:", slot_num, "Page_Num",page_num)
                 self.tail_pages[page_num + i].write(new_record_col[i])
             else:
                 self.tail_pages[page_num+i].write(0)
@@ -360,20 +361,19 @@ class Table:
         # Decrement tail rid
         self.tail_rid -= 1
 
+        return True
+
 
     def sum(self, start_range, end_range, col_index_to_add):
         total = 0
 
         record_list = self.index.locate_range(start_range, end_range, column = 0)
 
+        if len(record_list) == 0:
+            return False
+
+
         for record in record_list:
-
-        # for key in self.key_map:
-        #     if key < start_range or key > end_range:
-        #         continue
-
-            # record = self.key_map[key]
-            # record = self.index.locate(column = 0, value = key)[0]
 
             rid = record.rid
 
@@ -406,7 +406,7 @@ class Table:
 
     def delete(self, key):
         try:
-            # record = self.key_map[key]
+            # record = self.key]
             record = self.index.locate(column = 0, value = key)[0]
 
             record.rid = None

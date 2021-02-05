@@ -20,6 +20,7 @@ class Query:
     # Return False if record doesn't exist or is locked due to 2PL
     """
     def delete(self, key):
+        return self.table.delete(key)
         pass
 
     """
@@ -28,8 +29,13 @@ class Query:
     # Returns False if insert fails for whatever reason
     """
     def insert(self, *columns):
-        schema_encoding = '0' * self.table.num_columns
-        self.table.add(*columns)
+        try:
+            schema_encoding = '0' * self.table.num_columns
+            self.table.add(*columns)
+            return True  
+        except:
+            return False
+
 
     """
     # Read a record with specified key
@@ -48,8 +54,8 @@ class Query:
     # Returns True if update is succesful
     # Returns False if no records exist with given key or if the target record cannot be accessed due to 2PL locking
     """
-    def update(self, key, *columns):
-        self.table.update(key, *columns)
+    def update(self, key, *columns): 
+        return self.table.update(key, *columns)
 
 
     """

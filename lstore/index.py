@@ -22,8 +22,11 @@ class Index:
 
             if isNotList and located_value is not None:
                 located_value = [located_value]
-            return located_value
+            
+        if located_value == None:
+            return [-1]
 
+        return located_value
     """
     # Returns the RIDs of all records with values in column "column" between "begin" and "end"
     """
