@@ -77,26 +77,25 @@ class Index:
 
 
     def insert(self, key, value, column=0):
+        if self.indices[column] is not None:
+            valueNeedsToBeList = self.indices[column].has_key(key)
 
-    if self.indices[column] is not None:
-        valueNeedsToBeList = self.indices[column].has_key(key)
+            if valueNeedsToBeList:
+                popped_value = self.indices[column].pop(key)
+                valueAlreadyList = isinstance(popped_value, list)
 
-        if valueNeedsToBeList:
-            popped_value = self.indices[column].pop(key)
-            valueAlreadyList = isinstance(popped_value, list)
+                if valueAlreadyList:
+                    value_list = [*popped_value, value]
+                else:
+                    value_list = [popped_value, value]
 
-            if valueAlreadyList:
-                value_list = [*popped_value, value]
-            else:
-                value_list = [popped_value, value]
-
-            value_list.sort()
-            
-            self.indices[column].insert(key, value_list)
-        else: 
-            self.indices[column].insert(key, value)
-    else:
-        raise IndexError(f"No Index at Column {column}!")
+                value_list.sort()
+                
+                self.indices[column].insert(key, value_list)
+            else: 
+                self.indices[column].insert(key, value)
+        else:
+            raise IndexError(f"No Index at Column {column}!")
 
     
 
