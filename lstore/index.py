@@ -27,20 +27,16 @@ class Index:
     def locate_range(self, begin, end, column=0):
         if self.indices[column] is not None:
             located_values = list(self.indices[column].values(begin, end))
+            values_to_delist = []
             
-            if located_values == []:
-                located_values = [-1]
-            else:
-                values_to_delist = []
-    
-                for index, value in enumerate(located_values):
-                    if isinstance(value, list):
-                        for val in value:
-                            values_to_delist.append(val)
-                
-                located_values = [value for value in located_values if not isinstance(value, list)]
-                located_values = located_values + values_to_delist
-                located_values.sort()
+            for index, value in enumerate(located_values):
+                if isinstance(value, list):
+                    for val in value:
+                        values_to_delist.append(val)
+            
+            located_values = [value for value in located_values if not isinstance(value, list)]
+            located_values = located_values + values_to_delist
+            # located_values.sort()
             
             return located_values
         else:
