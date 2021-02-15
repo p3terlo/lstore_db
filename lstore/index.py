@@ -22,11 +22,13 @@ class Index:
 
             if isNotList and located_value is not None:
                 located_value = [located_value]
-            
-        if located_value == None:
-            return [-1]
+            elif located_value is None:
+                located_value = [-1]
 
-        return located_value
+            return located_value    
+        else:
+            raise IndexError(f"No Index at Column {column}!")
+
     """
     # Returns the RIDs of all records with values in column "column" between "begin" and "end"
     """
@@ -34,18 +36,24 @@ class Index:
     def locate_range(self, begin, end, column=0):
         if self.indices[column] is not None:
             located_values = list(self.indices[column].values(begin, end))
-            values_to_delist = []
             
-            for index, value in enumerate(located_values):
-                if isinstance(value, list):
-                    for val in value:
-                        values_to_delist.append(val)
-            
-            located_values = [value for value in located_values if not isinstance(value, list)]
-            located_values = located_values + values_to_delist
-            # located_values.sort()
+            if located_values == []:
+                located_values = [-1]
+            else:
+                values_to_delist = []
+    
+                for index, value in enumerate(located_values):
+                    if isinstance(value, list):
+                        for val in value:
+                            values_to_delist.append(val)
+                
+                located_values = [value for value in located_values if not isinstance(value, list)]
+                located_values = located_values + values_to_delist
+                located_values.sort()
             
             return located_values
+        else:
+            raise IndexError(f"No Index at Column {column}!")
 
     """
     # optional: Create index on specific column
@@ -70,6 +78,7 @@ class Index:
 
     def insert(self, key, value, column=0):
 
+    if self.indices[column] is not None:
         valueNeedsToBeList = self.indices[column].has_key(key)
 
         if valueNeedsToBeList:
@@ -86,6 +95,8 @@ class Index:
             self.indices[column].insert(key, value_list)
         else: 
             self.indices[column].insert(key, value)
+    else:
+        raise IndexError(f"No Index at Column {column}!")
 
     
 
