@@ -34,15 +34,12 @@ class Table:
         self.index = Index(self)
 
         # Added structures
-        self.key_map = {}
         self.base_pages = []
         self.tail_pages = []
 
+        self.base_rid = 1
         self.tail_rid = MAX_INT
-        
-        #RID
-        # self.rid = rid
-        
+
 
     def __merge(self):
         pass
@@ -78,12 +75,10 @@ class Table:
         slots_per_page = int(PAGE_CAPACITY_IN_BYTES / INTEGER_CAPACITY_IN_BYTES)
         output[SLOT_NUM_COL] = (MAX_INT - rid) % slots_per_page
 
-        # page_offset = int((MAX_INT - rid) / PAGE_RANGE) 
         page_offset = int((MAX_INT - rid) / slots_per_page) 
 
         output[PAGE_NUM_COL] = num_columns * page_offset
 
-        # output[PAGE_RANGE_COL] = page_offset
         output[PAGE_RANGE_COL] = int((MAX_INT - rid) / PAGE_RANGE) 
 
         return output
@@ -105,8 +100,7 @@ class Table:
 
     def create_tail_pages(self):
         num_tail_pages = len(self.tail_pages)
-        # num_records = len(self.key_map) - 1
-        num_records = len(self.page_directory) - 1
+        num_records = self.base_rid - 1
 
         noTailPagesInTable = num_tail_pages == 0
         records_covered = (num_tail_pages / self.num_columns) * PAGE_RANGE
@@ -124,8 +118,7 @@ class Table:
         self.create_tail_pages()
 
         # Create record
-        # rid = len(self.key_map) + 1
-        rid = len(self.page_directory) + 1
+        rid = self.base_rid
         record_key = columns[self.key]
         milliseconds = int(round(time.time() * 1000))
         schema = 0
@@ -152,10 +145,11 @@ class Table:
         directory = [page_range_num, starting_page_num, slot_num]
         self.page_directory[rid] = directory
 
+        self.base_rid += 1
+
         
     def fetch(self, key):
         
-        # record = self.key_map[key]
         record = self.index.locate(column = 0, value = key)[0]
 
         #record.display()
@@ -181,7 +175,6 @@ class Table:
             
       
     def select(self, key, column, query_columns):
-        # record = self.key_map[key]
         record = self.index.locate(column = 0, value = key)[0]
 
         rid = record.rid
@@ -392,7 +385,6 @@ class Table:
 
     def delete(self, key):
         try:
-            # record = self.key]
             record = self.index.locate(column = 0, value = key)[0]
 
             record.rid = None
