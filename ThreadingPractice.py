@@ -18,6 +18,7 @@ class myThread (threading.Thread):
    def process_data(threadName, q):
       while not exitFlag:
          queueLock.acquire()
+         #The acquire() method will be called when the block is entered, and release() will be called when the block is exited
             if not workQueue.empty():
                data = q.get()
                queueLock.release()
