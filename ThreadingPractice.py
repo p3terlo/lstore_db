@@ -1,5 +1,6 @@
 import Queue
 import threading
+#Document explaining threading functions: https://docs.python.org/3/library/threading.html 
 import time
 
 exitFlag = 0
@@ -30,6 +31,7 @@ class myThread (threading.Thread):
 threadList = ["Thread-1", "Thread-2", "Thread-3"]
 nameList = ["One", "Two", "Three", "Four", "Five"]
 queueLock = threading.Lock()
+#Once a thread has acquired a lock, subsequent attempts to acquire it block, until it is released; any thread may release it.
 workQueue = Queue.Queue(10)
 threads = []
 threadID = 1
