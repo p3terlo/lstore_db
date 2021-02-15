@@ -25,6 +25,9 @@ class Page:
         val_as_bytes = value.to_bytes(INTEGER_CAPACITY_IN_BYTES, 'big')
         slot_num = self.num_records * INTEGER_CAPACITY_IN_BYTES
 
+        # print("VALUE:",value)
+
+
         if self.has_capacity():
             for byte_index in range(INTEGER_CAPACITY_IN_BYTES):  
                 self.data[slot_num + byte_index] = val_as_bytes[byte_index]
