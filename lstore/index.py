@@ -1,8 +1,5 @@
 
 from BTrees.IOBTree import IOBTree 
-"""
-A data structure holding indices for various columns of a table. Key column should be indexd by default, other columns can be indexed through this object. Indices are usually B-Trees, but other data structures can be used as well.
-"""
 
 class Index:
     
@@ -11,9 +8,6 @@ class Index:
         self.indices = [None] *  table.num_columns
         self.create_index(column_number=0)
 
-    """
-    # returns the location of all records with the given value on column "column"
-    """
 
     def locate(self, column=0, value=None):
         if self.indices[column] is not None:
@@ -29,9 +23,6 @@ class Index:
         else:
             raise IndexError(f"No Index at Column {column}!")
 
-    """
-    # Returns the RIDs of all records with values in column "column" between "begin" and "end"
-    """
 
     def locate_range(self, begin, end, column=0):
         if self.indices[column] is not None:
@@ -55,9 +46,6 @@ class Index:
         else:
             raise IndexError(f"No Index at Column {column}!")
 
-    """
-    # optional: Create index on specific column
-    """
 
     def create_index(self, column_number=0):
         self.indices[column_number] = IOBTree()
@@ -67,9 +55,6 @@ class Index:
         # So I left as is.
         pass
 
-    """
-    # optional: Drop index of specific column
-    """
 
     def drop_index(self, column_number=0):
         self.indices[column_number].clear()
@@ -98,4 +83,17 @@ class Index:
             raise IndexError(f"No Index at Column {column}!")
 
     
+    def update(self, key, old_value, new_value, column=0):
 
+        if self.indices[column] is not None:
+            
+            if self.indices[column].has_key(key):
+                values = self.indices[column].pop(key)
+
+                if len(values) == 1:
+                    self.indices[column].insert(key, new_value)
+                else:
+                    new_values = [value for value in values if value != old_value] + [new_value]
+                    self.indices[column].insert(key, new_values)
+        else:
+            raise IndexError(f"No Index at Column {column}!")

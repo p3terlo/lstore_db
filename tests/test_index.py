@@ -210,3 +210,21 @@ class TestIndex(unittest.TestCase):
 
         self.assertEqual(sorted_values, self.index_for_table.locate_range(begin=1, end=5, column=0))
 
+
+    def test_update(self):
+            key = 5
+            value = 14
+            second_value = 23
+            new_value = 20
+            
+            self.index_for_table.insert(key, value)
+            self.index_for_table.insert(key, second_value)
+            print(self.index_for_table.locate(column=0, value=key))
+
+            self.index_for_table.update(key, value, new_value)
+
+            print(self.index_for_table.locate(column=0, value=key))
+
+            
+            self.assertEqual([second_value, new_value], self.index_for_table.locate(value=key))
+        
