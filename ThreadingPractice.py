@@ -1,4 +1,5 @@
 import Queue
+#Background thread for merge, Single thread for query
 import threading
 #Document explaining threading functions: https://docs.python.org/3/library/threading.html 
 import time
