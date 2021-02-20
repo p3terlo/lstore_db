@@ -148,30 +148,20 @@ class Table:
         self.base_rid += 1
 
         
-    def fetch(self, key):
+    def fetch_page(self, key):
         
         record = self.index.locate(column = 0, value = key)[0]
-
-        #record.display()
         rid = record.rid
 
         page_locations = self.page_directory[rid]
-        page_ids_belonging_to_rid = self.page_directory[rid]
-  
-        record_display = []
+        page_id = page_locations[PAGE_NUM_COL]
 
-        slot_id = self.calculate_slot_number(rid)
-
-        for page_id in page_ids_belonging_to_rid:
-            record_display.append(self.base_pages[page_id].grab_slot(slot_id))
-
-        print(record_display)
-        print()
+        return page_id
 
         
-    def display_pages(self):
-        for page in self.base_pages:
-            page.display_internal_memory()
+    # def display_pages(self):
+    #     for page in self.base_pages:
+    #         page.display_internal_memory()
             
       
     def select(self, key, column, query_columns):
