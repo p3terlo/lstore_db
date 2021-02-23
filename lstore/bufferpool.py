@@ -4,9 +4,15 @@ class BufferPool:
 
     def __init__(self):
         self.pool = {}
-        self.capacity = 0
+        self.capacity = BUFF_POOL_SIZE
         self.num_pages = 0
         self.lru_queue = LRU_Queue()
+
+    def check_pool(self, key, table):
+        if key in self.pool[table].pages:
+            return SUCCESS
+        else:        
+            return FAIL
 
     def add(self, buffer_page):
         self.enqueue_pages()
@@ -34,7 +40,7 @@ class BufferPool:
 
         lru_page = self.lru_queue.pop()
 
-        if (lru_page == 1):
+        if (lru_page == FAIL):
             print("Evict error")
             return FAIL
 
@@ -44,6 +50,7 @@ class BufferPool:
 
         if (is_dirty):
             # Write page to memory, then pop
+            return SUCCESS
         else:
             self.pool[table].pages.pop(key)
             self.num_pages -= 1

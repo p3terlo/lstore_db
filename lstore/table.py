@@ -113,6 +113,7 @@ class Table:
                 new_tail_page = Page()
                 self.tail_pages.append(new_tail_page)
 
+
     def add(self, *columns):
         self.create_base_pages()
         self.create_tail_pages()

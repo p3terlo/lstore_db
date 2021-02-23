@@ -11,7 +11,6 @@ class Database():
 
     def open(self, path):
         self.path = path
-        self.bufferpool.capacity = BUFF_POOL_SIZE
 
         # Create path for files to be stored
         try:
