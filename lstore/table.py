@@ -142,9 +142,6 @@ class Table:
         # Get page number from RID
         page_dict = self.calculate_base_page_numbers(self.num_columns + NUM_DEFAULT_COLUMNS, rid)
 
-        # for i in page_dict.values():
-        #     print(i)
-
         slot_num = page_dict[SLOT_NUM_COL]
         starting_page_num = page_dict[PAGE_NUM_COL]
         page_range_num = page_dict[PAGE_RANGE_COL]
@@ -154,19 +151,18 @@ class Table:
 
         # Write record to pages
         for i in range(len(record_col)):
-            # Check if page in bufferpool
+
             current_page = starting_page_num + i
+            print("current page: ", current_page)
             page_is_in_pool = self.bufferpool.check_pool(current_page)
 
             if page_is_in_pool:
-                print("page in pool")
-                # Retrieve page from buffer pool and write record attribute to it
-                bp = self.bufferpool[current_page]
-                page = bp.page
-                page.write(record_col[i])
 
+                # Retrieve page from buffer pool and write record attribute to it
+                bp = self.bufferpool.pool[current_page]
+                page = bp.page
+            
             else:
-                print("page not in pool")
                 # Check if page exists on disk
 
                 # If not, create new page
@@ -177,12 +173,8 @@ class Table:
                 bp = BufferPage(page.page_num, page, self.name)
                 self.bufferpool.add(bp)
 
-                # Write record attribute to page
-                page.write(record_col[i])
-
-
-            # self.base_pages[starting_page_num + i].write(record_col[i])
-
+            # Write record attribute to page
+            page.write(record_col[i])
 
         # Update page directory
         directory = [page_range_num, starting_page_num, slot_num]

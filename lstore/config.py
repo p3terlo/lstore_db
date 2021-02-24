@@ -2,8 +2,8 @@
 # PageSize, StartRID, etc..
 import sys
 
-SUCCESS = 0
-FAIL = 1
+SUCCESS = True
+FAIL = False
 
 BUFF_POOL_SIZE = 10
 

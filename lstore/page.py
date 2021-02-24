@@ -48,7 +48,7 @@ class Page:
 
     def display_internal_memory(self):
 
-        print("\nPage")
+        print("\nPage ", self.page_num)
         slot_val = []
             
         for bytearray_index in range(len(self.data)):
