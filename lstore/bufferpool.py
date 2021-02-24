@@ -1,5 +1,6 @@
 from lstore.config import *
 from lstore.page import *
+import os
 
 class BufferPool:
 
@@ -151,8 +152,11 @@ class Frame:
         file_name = path + "/" + self.table_name + "_" + str(file_num) + ".bin"
         #print(file_name)
 
-        
-        file= open(file_name, "a+b") #binary
+        mode = "w+b"
+        if os.path.exists(file_name):
+            mode = "r+b"
+            
+        file= open(file_name, mode) #binary
 
         file.seek(seek_offset * seek_mult)
         file.write(page.data)
