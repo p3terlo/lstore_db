@@ -153,21 +153,30 @@ class Table:
         for i in range(len(record_col)):
 
             current_page = starting_page_num + i
-            print("Attempting to write: ", current_page)
+            print("Attempting to write to page : ", current_page)
 
-            
-            page_is_in_pool = self.bufferpool.check_pool(current_page)
+            page_is_in_bufferpool = self.bufferpool.check_pool(current_page)
+
+            # If page not in bufferpool
+            if not page_is_in_bufferpool:
+                # Retrieve page from memory
 
 
-            if not page_is_in_pool: # If page not in pool then pin
-                print("Pinning page!")
+                # If page doesn't exist in memory, create page
+                print(f"Page {current_page} does not exist in bufferpool. Adding Page {current_page}.")
                 page = Page(self.bufferpool.total_db_pages)
                 self.bufferpool.total_db_pages += 1
-                self.bufferpool.pin_page(page, self.name)
+
+                # Add page to bufferpool
+                self.bufferpool.add_page(page, self.name)
 
             page = self.bufferpool.pool[current_page].page
-            page.write(record_col[i])
 
+            # Pin page, write to memory, unpin page, set page to dirty
+            self.bufferpool.pin_page(current_page)
+            page.write(record_col[i])
+            self.bufferpool.unpin_page(current_page)
+            # self.bufferpool.pool[current_page].dirty_page()
 
         # Update page directory
         directory = [page_range_num, starting_page_num, slot_num]
