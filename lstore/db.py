@@ -6,6 +6,7 @@ class Database():
 
     def __init__(self):
         self.path = ""
+        self.tables = {}
         self.bufferpool = BufferPool()
 
 
@@ -23,25 +24,25 @@ class Database():
         pass
 
 
-    def create_table(self, name, num_columns, key):
-        table = Table(name, num_columns, key)
-        if name in self.bufferpool:
+    def create_table(self, name, num_columns, key, buffer_pool):
+        table = Table(name, num_columns, key, self.bufferpool)
+        if name in self.tables:
             print("create_table Error: Table with name %s already exists" % (name))
         else:
-            self.bufferpool.pool[name] = BufferTable(name, table)
+            self.tables[name] = table
             return table
 
 
     def drop_table(self, name):
         try:
-            self.bufferpool.pop(name)
+            self.tables.pop(name)
         except KeyError:
             print("drop_table Error: No table exists with name %s" % (name))
 
 
     def get_table(self, name):
         try:
-            table = self.bufferpool[name].table
+            table = self.tables[name]
             return table
         except KeyError:
             print("get_table Error: No table exists with name %s" % (name))

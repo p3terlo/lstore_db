@@ -3,7 +3,8 @@ from lstore.config import *
 
 class Page:
 
-    def __init__(self):
+    def __init__(self, page_num):
+        self.page_num = page_num
         self.num_records = 0
         self.data = bytearray(PAGE_CAPACITY_IN_BYTES)
 

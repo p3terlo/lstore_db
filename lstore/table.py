@@ -1,6 +1,7 @@
-from lstore.page import *
+from lstore.bufferpool import BufferPage
 from lstore.config import *
 from lstore.index import Index
+from lstore.page import *
 import time
 
 class Record:
@@ -24,10 +25,11 @@ class Table:
     :param num_columns: int     #Number of Columns: all columns are integer
     :param key: int             #Index of table key in columns
     """
-    def __init__(self, name, num_columns, key):
+    def __init__(self, name, num_columns, key, buffer_pool):
         self.name = name
         self.key = key
         self.num_columns = num_columns
+        self.bufferpool = buffer_pool
 
         # Page directory should map RID to [page range, page, offset (AKA slot number)]
         self.page_directory = {}
@@ -94,7 +96,7 @@ class Table:
         # If initializing empty base pages for the first time, or if current set of base pages are full, create new set of base pages
         if ((noBasePagesInTable) or (base_pages_full)):
             for _ in range(self.num_columns + NUM_DEFAULT_COLUMNS):
-                new_base_page = Page()
+                new_base_page = Page(0)
                 self.base_pages.append(new_base_page)
 
 
@@ -110,13 +112,13 @@ class Table:
 
         if ((noTailPagesInTable) or (num_records > records_covered) or (tail_pages_full)):
             for _ in range(self.num_columns + NUM_DEFAULT_COLUMNS):
-                new_tail_page = Page()
+                new_tail_page = Page(0)
                 self.tail_pages.append(new_tail_page)
 
 
     def add(self, *columns):
-        self.create_base_pages()
-        self.create_tail_pages()
+        # self.create_base_pages()
+        # self.create_tail_pages()
 
         # Create record
         rid = self.base_rid
@@ -132,17 +134,57 @@ class Table:
 
         base_record = Record(rid, record_key, record_col)
         
+        # Insert record in index
         # Key -> record -> RID
         self.index.insert(record_key, base_record)
 
+
+        # Get page number from RID
         page_dict = self.calculate_base_page_numbers(self.num_columns + NUM_DEFAULT_COLUMNS, rid)
+
+        # for i in page_dict.values():
+        #     print(i)
+
         slot_num = page_dict[SLOT_NUM_COL]
         starting_page_num = page_dict[PAGE_NUM_COL]
         page_range_num = page_dict[PAGE_RANGE_COL]
-        
-        for i in range(len(record_col)):
-            self.base_pages[starting_page_num + i].write(record_col[i])
 
+        print(slot_num, starting_page_num, page_range_num)
+
+
+        # Write record to pages
+        for i in range(len(record_col)):
+            # Check if page in bufferpool
+            current_page = starting_page_num + i
+            page_is_in_pool = self.bufferpool.check_pool(current_page)
+
+            if page_is_in_pool:
+                print("page in pool")
+                # Retrieve page from buffer pool and write record attribute to it
+                bp = self.bufferpool[current_page]
+                page = bp.page
+                page.write(record_col[i])
+
+            else:
+                print("page not in pool")
+                # Check if page exists on disk
+
+                # If not, create new page
+                page = Page(self.bufferpool.total_db_pages)
+                self.bufferpool.total_db_pages += 1
+
+                # Add buffer page to bufferpool
+                bp = BufferPage(page.page_num, page, self.name)
+                self.bufferpool.add(bp)
+
+                # Write record attribute to page
+                page.write(record_col[i])
+
+
+            # self.base_pages[starting_page_num + i].write(record_col[i])
+
+
+        # Update page directory
         directory = [page_range_num, starting_page_num, slot_num]
         self.page_directory[rid] = directory
 
