@@ -1,26 +1,34 @@
 from lstore.config import *
 
-
 class Page:
 
-    def __init__(self):
+    def __init__(self, page_num):
+        self.page_num = page_num
         self.num_records = 0
         self.data = bytearray(PAGE_CAPACITY_IN_BYTES)
 
-
     def has_capacity(self):
         return self.num_records < int(PAGE_CAPACITY_IN_BYTES/INTEGER_CAPACITY_IN_BYTES)
-
-
-    def is_full(self): #returns true if slots are filled
-        return self.num_records == int(PAGE_CAPACITY_IN_BYTES/INTEGER_CAPACITY_IN_BYTES)
-           
         
     def next_empty_slot(self):
         slot_num = self.num_records * 8
         return slot_num
-      
+
+    def write_slot(self, rid, value): # needs to be tested
+        val_as_bytes = value.to_bytes(INTEGER_CAPACITY_IN_BYTES, 'big')
+        slot_start = rid % int(PAGE_CAPACITY_IN_BYTES/INTEGER_CAPACITY_IN_BYTES)
+
+        slot_num = slot_start * INTEGER_CAPACITY_IN_BYTES
+
+        if self.has_capacity():
+            for byte_index in range(INTEGER_CAPACITY_IN_BYTES):  
+                self.data[slot_num + byte_index] = val_as_bytes[byte_index]
+            self.num_records += 1
+        else:
+            raise IndexError("Out of Range!")
         
+        
+      
     def write(self, value):
         val_as_bytes = value.to_bytes(INTEGER_CAPACITY_IN_BYTES, 'big')
         slot_num = self.num_records * INTEGER_CAPACITY_IN_BYTES
@@ -47,7 +55,7 @@ class Page:
 
     def display_internal_memory(self):
 
-        print("\nPage")
+        print("\nPage ", self.page_num)
         slot_val = []
             
         for bytearray_index in range(len(self.data)):
@@ -58,11 +66,6 @@ class Page:
                 print(self.broken_bytes_to_int(slot_val))
                 slot_val.clear()
 
-                
-    def get_page_capacity(self): 
-        return PAGE_CAPACITY_IN_BYTES
-
-
     def grab_slot(self, slot_num): #reading from memeory
         byte_val = []
         for byte_i in range(INTEGER_CAPACITY_IN_BYTES):
@@ -70,6 +73,10 @@ class Page:
 
         integer = self.broken_bytes_to_int(byte_val)
         return integer
+
+
+    
+        
       
       
     def update(self, value, slot):

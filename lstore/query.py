@@ -46,6 +46,7 @@ class Query:
     # Assume that select will never be called on a key that doesn't exist
     """
     def select(self, key, column, query_columns):
+        page_id = self.table.fetch_page(key)
         selectedObject = self.table.select(key, column, query_columns)
         return selectedObject
 
@@ -87,4 +88,3 @@ class Query:
             u = self.update(key, *updated_columns)
             return u
         return False
-
