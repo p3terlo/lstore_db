@@ -9,12 +9,14 @@ class BufferPool:
         self.total_db_pages = 0
         self.lru_queue = LRU_Queue()
 
+
     def check_pool(self, key):
         # print(self.pool)
         if key in self.pool:
             return SUCCESS
         else:        
             return FAIL
+
 
     def print_pool(self):
         if len(self.pool) == 0:
@@ -24,21 +26,22 @@ class BufferPool:
             frame.print_page()
 
 
-    def add(self, buffer_page):
-        self.enqueue_pages()
-        self.evict()
+    def pin_page(self, page, table_name):
+            self.enqueue_pages()
+            self.evict_page()
 
-        if (self.num_pages >= self.capacity):
-            print("Cannot add page, all pages in buffer pool currently pinned")
-            return FAIL
+            if (self.num_pages >= self.capacity):
+                print("Cannot add page, all pages in buffer pool currently pinned")
+                return FAIL
 
-        key = buffer_page.key
+            frame = Frame(page.page_num, page, table_name)
 
-        self.pool[key] = buffer_page
-        self.num_pages += 1
-        return SUCCESS
+            self.pool[page.page_num] = frame
+            self.num_pages += 1
+            return SUCCESS
 
-    def evict(self):
+
+    def evict_page(self):
         if (self.num_pages < self.capacity):
             return FAIL
 
@@ -101,9 +104,9 @@ class LRU_Queue:
 
         print("\n")
 
-    def add(self, buffer_page):
-        if buffer_page.pin_count == 0:
-            self.queue.append(buffer_page)
+    def add(self, frame):
+        if frame.pin_count == 0:
+            self.queue.append(frame)
             # print(self.queue)
             return SUCCESS
         else:

@@ -153,24 +153,21 @@ class Table:
         for i in range(len(record_col)):
 
             current_page = starting_page_num + i
-            print("current page: ", current_page)
+            print("Attempting to write: ", current_page)
+
+            
             page_is_in_pool = self.bufferpool.check_pool(current_page)
 
-            if page_is_in_pool:
 
-                # Retrieve page from buffer pool and write record attribute to it
-                page = self.bufferpool.pool[current_page].page
-            
-            else:
+            if not page_is_in_pool: # If page not in pool then pin
+                print("Pinning page!")
                 page = Page(self.bufferpool.total_db_pages)
                 self.bufferpool.total_db_pages += 1
+                self.bufferpool.pin_page(page, self.name)
 
-                # Add buffer page to bufferpool
-                frame = Frame(page.page_num, page, self.name)
-                self.bufferpool.add(frame)
-
-            # Write record attribute to page
+            page = self.bufferpool.pool[current_page].page
             page.write(record_col[i])
+
 
         # Update page directory
         directory = [page_range_num, starting_page_num, slot_num]
