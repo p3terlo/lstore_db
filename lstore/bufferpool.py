@@ -13,7 +13,7 @@ class BufferPool:
         self.number_current_pages = 0
 
 
-    def grab_page(self, page_num: int) -> None:
+    def get_page(self, page_num: int) -> None:
         #TODO: Increment Pin count 
         if page_num not in self.frame_cache:
             raise KeyError(f"Invalid Page: {page_num}. Not in Queue.")
@@ -60,9 +60,9 @@ class BufferPool:
             key = lru_frame.key
             is_dirty = lru_frame.is_dirty
 
-            if (is_dirty):
-                print("Persisting LRU Frame ", key)
-                lru_frame.write_frame(self.path)
+            # if (is_dirty):
+            #     print("Persisting LRU Frame ", key)
+            #     lru_frame.write_frame(self.path)
                 
 
 
@@ -81,20 +81,21 @@ class BufferPool:
 
         return page_id in self.frame_cache
 
-    def read_page(self, table_name, page_num, num_cols):
-        seek_offset = int(page_num/num_cols)
-        seek_mult = PAGE_CAPACITY_IN_BYTES
 
-        file_num = page_num % num_cols
-        file_name = self.path + "/" + table_name + "_" + str(file_num) + ".bin"
+    # def read_page(self, table_name, page_num, num_cols):
+    #     seek_offset = int(page_num/num_cols)
+    #     seek_mult = PAGE_CAPACITY_IN_BYTES
 
-        file = open(file_name, "rb")
-        file.seek(seek_offset * seek_mult)
-        data = file.read(seek_mult)
+    #     file_num = page_num % num_cols
+    #     file_name = self.path + "/" + table_name + "_" + str(file_num) + ".bin"
 
-        #print(data)
-        file.close()
+    #     file = open(file_name, "rb")
+    #     file.seek(seek_offset * seek_mult)
+    #     data = file.read(seek_mult)
 
-        test_page = Page(page_num)
-        test_page.data = data
-        test_page.display_internal_memory()
+    #     #print(data)
+    #     file.close()
+
+    #     test_page = Page(page_num)
+    #     test_page.data = data
+    #     test_page.display_internal_memory()
