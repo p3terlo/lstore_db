@@ -1,6 +1,7 @@
 from lstore.config import *
 from lstore.table import Table
 from lstore.bufferpool import *
+import os
 
 class Database():
 
@@ -12,6 +13,7 @@ class Database():
 
     def open(self, path):
         self.path = path
+        self.bufferpool.assign_path(path)
 
         # Create path for files to be stored
         try:
@@ -24,8 +26,9 @@ class Database():
         pass
 
 
-    def create_table(self, name, num_columns, key, buffer_pool):
-        table = Table(name, num_columns, key, self.bufferpool)
+    def create_table(self, name, num_columns, key):
+        table = Table(name, num_columns, key)
+        table.pass_bufferpool(self.bufferpool)
         if name in self.tables:
             print("create_table Error: Table with name %s already exists" % (name))
         else:
