@@ -91,8 +91,8 @@ class Table:
 
         bufferpool = self.bufferpool
 
-        for i in range(10):
-            bufferpool.read_page(self.name, i, self.num_columns)
+        for i in range(17):
+            bufferpool.read_page(self.name, i, self.num_columns + NUM_DEFAULT_COLUMNS)
             
         
         print("done")
