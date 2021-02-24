@@ -1,9 +1,9 @@
-from lstore.db import Database
-from lstore.query import Query
-#from lstore.config import init
+from template.db import Database
+from template.query import Query
+from template.config import init
 
 from random import choice, randint, sample, seed
-#init()
+init()
 
 db = Database()
 db.open('./ECS165')
@@ -14,15 +14,13 @@ query = Query(grades_table)
 # repopulate with random data
 records = {}
 seed(3562901)
-for i in range(0, 12):
+for i in range(0, 1000):
     key = 92106429 + i
     records[key] = [key, randint(0, 20), randint(0, 20), randint(0, 20), randint(0, 20)]
     query.insert(*records[key])
 keys = sorted(list(records.keys()))
 print("Insert finished")
-grades_table.sample_read()
-#grades_table.bufferpool.print_pool()
-"""
+
 for key in keys:
     record = query.select(key, 0, [1, 1, 1, 1, 1])[0]
     error = False
@@ -65,6 +63,4 @@ for i in range(0, 100):
     # else:
     #     print('sum on [', keys[r[0]], ',', keys[r[1]], ']: ', column_sum)
 print("Aggregate finished")
-"""
 db.close()
-
