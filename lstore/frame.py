@@ -7,17 +7,17 @@ class Frame:
         self.key = page_num
         self.page = page
         self.table = table
-        self.pin_count = 0
+        self.outstanding_transactions = 0
         self.is_dirty = False
 
 
-    def increment_pin(self):
-        self.pin_count += 1
+    def pin_page(self):
+        self.outstanding_transactions += 1
 
 
-    def decrement_pin(self):
-        if self.pin_count > 0:
-            self.pin_count -= 1
+    def unpin_page(self):
+        if self.outstanding_transactions > 0:
+            self.outstanding_transactions -= 1
 
 
     def make_dirty(self):
