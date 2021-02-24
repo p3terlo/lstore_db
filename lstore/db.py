@@ -1,14 +1,15 @@
 from lstore.config import *
 from lstore.table import Table
-from lstore.bufferpool import *
-import os
+from lstore.bufferpool import BufferPool
+
+
 
 class Database():
 
     def __init__(self):
         self.path = ""
         self.tables = {}
-        self.bufferpool = BufferPool()
+        self.bufferpool = BufferPool(BUFF_POOL_SIZE)
 
 
     def open(self, path):

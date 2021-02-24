@@ -2,6 +2,8 @@ from lstore.bufferpool import Frame
 from lstore.config import *
 from lstore.index import Index
 from lstore.page import *
+from lstore.bufferpool import BufferPool
+
 import time
 
 class Record:
@@ -123,12 +125,35 @@ class Table:
         for i in range(total_columns):
 
             current_page = starting_page_num + i
-            #print("Attempting to write: ", current_page)
 
-            #grabbing page
-            pageframe = self.bufferpool.grab_page(self.name, current_page, total_columns)
-            pageframe.write_value(record_col[i])
-            
+            print("Attempting to write to page : ", current_page)
+
+            page_is_in_bufferpool = self.bufferpool.check_pool(current_page)
+
+            # If page not in bufferpool
+            if not page_is_in_bufferpool:
+                # Retrieve page from memory
+
+                # If page doesn't exist in memory, create page
+                print(f"Page {current_page} does not exist in bufferpool. Adding Page {current_page}.")
+                page = Page(self.bufferpool.total_db_pages)
+                print(f"Created Page {current_page}")
+                self.bufferpool.total_db_pages += 1
+
+                # Add page to bufferpool
+                self.bufferpool.add_page(page, self.name)
+                print(f"Added Page {current_page} to Bufferpool!")
+
+            print("Writing to page...")
+            page = self.bufferpool.get_page(current_page, total_columns).page
+
+            # Pin page, write to memory, unpin page, set page to dirty
+            self.bufferpool.pin_page(current_page)
+            page.write(record_col[i])
+            self.bufferpool.unpin_page(current_page)
+            # self.bufferpool.pool[current_page].dirty_page()
+
+
         # Update page directory
         directory = [page_range_num, starting_page_num, slot_num]
         self.page_directory[rid] = directory
