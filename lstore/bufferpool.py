@@ -1,5 +1,6 @@
 from collections import OrderedDict
 
+
 from lstore.config import *
 from lstore.frame import Frame
 
@@ -7,13 +8,19 @@ from lstore.frame import Frame
 class BufferPool: 
 
     def __init__(self, capacity: int):
+        self.path = ""
         self.frame_cache = OrderedDict()
         self.capacity = capacity
         self.total_db_pages = 0
         self.number_current_pages = 0
+        
+        
+    def assign_path(self, path):
+        self.path = path
 
 
-    def get_page(self, page_num: int) -> None:
+
+    def get_page(self, page_num: int, total_columns: int) -> None:
         #TODO: Increment Pin count 
         if page_num not in self.frame_cache:
             raise KeyError(f"Invalid Page: {page_num}. Not in Queue.")
@@ -65,7 +72,6 @@ class BufferPool:
             #     lru_frame.write_frame(self.path)
                 
 
-
     def pin_page(self, page_num):
         frame = self.get_page(page_num)
         frame.pin_page()
@@ -96,6 +102,4 @@ class BufferPool:
     #     #print(data)
     #     file.close()
 
-    #     test_page = Page(page_num)
-    #     test_page.data = data
-    #     test_page.display_internal_memory()
+
