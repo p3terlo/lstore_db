@@ -3,7 +3,7 @@ import unittest
 
 from lstore.db import Database
 from lstore.query import Query
-from lstore.bufferpool import BufferPage, BufferPool
+from lstore.bufferpool import Frame, BufferPool
 
 class TestBufferPool(unittest.TestCase):
 
@@ -24,7 +24,7 @@ class TestBufferPool(unittest.TestCase):
 
         seed(3562901)
 
-        for i in range(0, 12):
+        for i in range(0, 3):
             key = 92106429 + randint(0, 9000)
             while key in records:
                 key = 92106429 + randint(0, 9000)
@@ -35,7 +35,7 @@ class TestBufferPool(unittest.TestCase):
         self.database.bufferpool.print_pool()
 
         # for i in range(0, 100):
-        #     bp = BufferPage(i, "hehexd", "table")
+        #     bp = Frame(i, "hehexd", "table")
         #     self.database.bufferpool.add(bp)
 
         # self.database.bufferpool.print_pool()

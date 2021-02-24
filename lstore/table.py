@@ -1,4 +1,4 @@
-from lstore.bufferpool import BufferPage
+from lstore.bufferpool import Frame
 from lstore.config import *
 from lstore.index import Index
 from lstore.page import *
@@ -159,19 +159,15 @@ class Table:
             if page_is_in_pool:
 
                 # Retrieve page from buffer pool and write record attribute to it
-                bp = self.bufferpool.pool[current_page]
-                page = bp.page
+                page = self.bufferpool.pool[current_page].page
             
             else:
-                # Check if page exists on disk
-
-                # If not, create new page
                 page = Page(self.bufferpool.total_db_pages)
                 self.bufferpool.total_db_pages += 1
 
                 # Add buffer page to bufferpool
-                bp = BufferPage(page.page_num, page, self.name)
-                self.bufferpool.add(bp)
+                frame = Frame(page.page_num, page, self.name)
+                self.bufferpool.add(frame)
 
             # Write record attribute to page
             page.write(record_col[i])
@@ -199,220 +195,220 @@ class Table:
     #         page.display_internal_memory()
             
       
-    def select(self, key, column, query_columns):
-        record = self.index.locate(column = 0, value = key)[0]
+    # def select(self, key, column, query_columns):
+    #     record = self.index.locate(column = 0, value = key)[0]
 
-        rid = record.rid
+    #     rid = record.rid
 
-        # Check if record was deleted
-        if rid == None:
-            return [False]
+    #     # Check if record was deleted
+    #     if rid == None:
+    #         return [False]
 
-        # Gather page locations from page_directory
-        page_location = self.page_directory[rid]
+    #     # Gather page locations from page_directory
+    #     page_location = self.page_directory[rid]
 
-        # Array to hold records
-        base_record = []
-        record_display = []
+    #     # Array to hold records
+    #     base_record = []
+    #     record_display = []
 
-        # Get slot and page numbers
-        slot = page_location[SLOT_NUM_COL]
-        start_page = page_location[PAGE_NUM_COL]
-        first_column_page = start_page + NUM_DEFAULT_COLUMNS
-        last_page = start_page + NUM_DEFAULT_COLUMNS + self.num_columns
-        indirection = self.base_pages[start_page + INDIRECTION_COLUMN].grab_slot(slot)
+    #     # Get slot and page numbers
+    #     slot = page_location[SLOT_NUM_COL]
+    #     start_page = page_location[PAGE_NUM_COL]
+    #     first_column_page = start_page + NUM_DEFAULT_COLUMNS
+    #     last_page = start_page + NUM_DEFAULT_COLUMNS + self.num_columns
+    #     indirection = self.base_pages[start_page + INDIRECTION_COLUMN].grab_slot(slot)
 
-        tail_update_index = []
+    #     tail_update_index = []
 
-        # Pull entire base record to base_record array
-        for page in range(NUM_DEFAULT_COLUMNS + self.num_columns):
-            base_record.append(self.base_pages[start_page + page].grab_slot(slot))
+    #     # Pull entire base record to base_record array
+    #     for page in range(NUM_DEFAULT_COLUMNS + self.num_columns):
+    #         base_record.append(self.base_pages[start_page + page].grab_slot(slot))
 
-        # For base records with no updates, take requested subset of base_record
-        if (indirection == NULL_PTR):
-            for page in range(NUM_DEFAULT_COLUMNS, self.num_columns + NUM_DEFAULT_COLUMNS):
-                if (query_columns[page - NUM_DEFAULT_COLUMNS] == 1):
-                    record_display.append(base_record[page])
+    #     # For base records with no updates, take requested subset of base_record
+    #     if (indirection == NULL_PTR):
+    #         for page in range(NUM_DEFAULT_COLUMNS, self.num_columns + NUM_DEFAULT_COLUMNS):
+    #             if (query_columns[page - NUM_DEFAULT_COLUMNS] == 1):
+    #                 record_display.append(base_record[page])
 
-        # If record has updates, go to most recent update
-        else:
-            page_location = self.page_directory[indirection]
-            start_page = page_location[PAGE_NUM_COL]
-            slot_num = page_location[SLOT_NUM_COL]
+    #     # If record has updates, go to most recent update
+    #     else:
+    #         page_location = self.page_directory[indirection]
+    #         start_page = page_location[PAGE_NUM_COL]
+    #         slot_num = page_location[SLOT_NUM_COL]
             
-            schema = self.tail_pages[start_page + SCHEMA_ENCODING_COLUMN].grab_slot(slot_num)
-            schema = str(schema)
-            leadingZeros = "0" * self.num_columns
-            schema = leadingZeros + schema
-            num = self.num_columns * -1
-            schema = schema[num:]
+    #         schema = self.tail_pages[start_page + SCHEMA_ENCODING_COLUMN].grab_slot(slot_num)
+    #         schema = str(schema)
+    #         leadingZeros = "0" * self.num_columns
+    #         schema = leadingZeros + schema
+    #         num = self.num_columns * -1
+    #         schema = schema[num:]
 
-            # If column is requested, pull from tail page
-            for i in range(len(schema)):
-                if schema[i] == "1":
-                    # tail_update_index.append(i)
-                    base_record[NUM_DEFAULT_COLUMNS + i] = self.tail_pages[start_page + NUM_DEFAULT_COLUMNS + i].grab_slot(slot_num)
+    #         # If column is requested, pull from tail page
+    #         for i in range(len(schema)):
+    #             if schema[i] == "1":
+    #                 # tail_update_index.append(i)
+    #                 base_record[NUM_DEFAULT_COLUMNS + i] = self.tail_pages[start_page + NUM_DEFAULT_COLUMNS + i].grab_slot(slot_num)
 
-            #for page in tail_update_index:
-            #    base_record[NUM_DEFAULT_COLUMNS + page] = self.tail_pages[start_page + NUM_DEFAULT_COLUMNS + page].grab_slot(slot_num)
+    #         #for page in tail_update_index:
+    #         #    base_record[NUM_DEFAULT_COLUMNS + page] = self.tail_pages[start_page + NUM_DEFAULT_COLUMNS + page].grab_slot(slot_num)
 
-            for page in range(NUM_DEFAULT_COLUMNS, self.num_columns + NUM_DEFAULT_COLUMNS):
-                if (query_columns[page - NUM_DEFAULT_COLUMNS] == 1):
-                    record_display.append(base_record[page])
+    #         for page in range(NUM_DEFAULT_COLUMNS, self.num_columns + NUM_DEFAULT_COLUMNS):
+    #             if (query_columns[page - NUM_DEFAULT_COLUMNS] == 1):
+    #                 record_display.append(base_record[page])
 
-        #Create temp record
-        return_array = []
-        temp_record = Record(rid, key, record_display)
-        return_array.append(temp_record)
+    #     #Create temp record
+    #     return_array = []
+    #     temp_record = Record(rid, key, record_display)
+    #     return_array.append(temp_record)
         
-        return return_array
+    #     return return_array
 
 
-    # Implemented with tail page and page range
-    def update(self, key, *columns):
-        self.create_tail_pages() 
+    # # Implemented with tail page and page range
+    # def update(self, key, *columns):
+    #     self.create_tail_pages() 
 
-        # Create new record
-        new_rid = self.tail_rid
-        new_time = int(round(time.time() * 1000))
-        schema = ""
-        for column in columns:
-            if column == None:
-                schema += "0"
-            else:
-                schema += "1"
-        schema = int(schema)
+    #     # Create new record
+    #     new_rid = self.tail_rid
+    #     new_time = int(round(time.time() * 1000))
+    #     schema = ""
+    #     for column in columns:
+    #         if column == None:
+    #             schema += "0"
+    #         else:
+    #             schema += "1"
+    #     schema = int(schema)
 
-        new_record_col = [new_rid, NULL_PTR, new_time, schema]
+    #     new_record_col = [new_rid, NULL_PTR, new_time, schema]
 
-        for column in columns:
-            new_record_col.append(column)
+    #     for column in columns:
+    #         new_record_col.append(column)
 
-        new_record = Record(new_rid, key, new_record_col)
+    #     new_record = Record(new_rid, key, new_record_col)
 
-        # Update indirection columns
-        base_record = self.index.locate(column = 0, value = key)[0]
+    #     # Update indirection columns
+    #     base_record = self.index.locate(column = 0, value = key)[0]
 
-        # Record not found
-        if base_record == -1:
-            return False
+    #     # Record not found
+    #     if base_record == -1:
+    #         return False
 
-        latest_record = base_record.columns[INDIRECTION_COLUMN]
+    #     latest_record = base_record.columns[INDIRECTION_COLUMN]
 
-        # If base record had previous updates
-        if latest_record != NULL_PTR:
-            # Point new record's indirection to previous most recent record
-            new_record_col[INDIRECTION_COLUMN] = latest_record
+    #     # If base record had previous updates
+    #     if latest_record != NULL_PTR:
+    #         # Point new record's indirection to previous most recent record
+    #         new_record_col[INDIRECTION_COLUMN] = latest_record
 
-            # Get both prev and current schema we are creating
-            prevUpdatePages = self.page_directory[latest_record]
-            current_schema = new_record_col[SCHEMA_ENCODING_COLUMN]
-            prev_schema = self.tail_pages[prevUpdatePages[PAGE_NUM_COL] + SCHEMA_ENCODING_COLUMN].grab_slot(prevUpdatePages[SLOT_NUM_COL])
+    #         # Get both prev and current schema we are creating
+    #         prevUpdatePages = self.page_directory[latest_record]
+    #         current_schema = new_record_col[SCHEMA_ENCODING_COLUMN]
+    #         prev_schema = self.tail_pages[prevUpdatePages[PAGE_NUM_COL] + SCHEMA_ENCODING_COLUMN].grab_slot(prevUpdatePages[SLOT_NUM_COL])
 
-            # Convert from int to useable string format EX: 01 -> "00001"
-            leadingZeros = "0" * self.num_columns
-            current_schema_string = leadingZeros + str(current_schema)
-            num = self.num_columns * -1
-            current_schema_string = current_schema_string[num:]
-            prev_schema_string = leadingZeros + str(prev_schema)
-            prev_schema_string = prev_schema_string[num:]
+    #         # Convert from int to useable string format EX: 01 -> "00001"
+    #         leadingZeros = "0" * self.num_columns
+    #         current_schema_string = leadingZeros + str(current_schema)
+    #         num = self.num_columns * -1
+    #         current_schema_string = current_schema_string[num:]
+    #         prev_schema_string = leadingZeros + str(prev_schema)
+    #         prev_schema_string = prev_schema_string[num:]
 
-            new_schema_string = ""
+    #         new_schema_string = ""
 
-            #Combine prev and current schema EX: 010 + 100 = 110
-            for i in range(self.num_columns):
-                if current_schema_string[i] == "1" or prev_schema_string[i] == "1":
-                    new_schema_string += "1"
-                else: 
-                    new_schema_string += "0"
+    #         #Combine prev and current schema EX: 010 + 100 = 110
+    #         for i in range(self.num_columns):
+    #             if current_schema_string[i] == "1" or prev_schema_string[i] == "1":
+    #                 new_schema_string += "1"
+    #             else: 
+    #                 new_schema_string += "0"
 
-            # Grab updates from previous updates, don't grab new updates or will overwrite them
-            for i in range(len(prev_schema_string)):
-                if prev_schema_string[i] == "1" and current_schema_string[i] != "1":
-                    new_record_col[NUM_DEFAULT_COLUMNS+i] = self.tail_pages[prevUpdatePages[PAGE_NUM_COL]+NUM_DEFAULT_COLUMNS+i].grab_slot(prevUpdatePages[SLOT_NUM_COL])
+    #         # Grab updates from previous updates, don't grab new updates or will overwrite them
+    #         for i in range(len(prev_schema_string)):
+    #             if prev_schema_string[i] == "1" and current_schema_string[i] != "1":
+    #                 new_record_col[NUM_DEFAULT_COLUMNS+i] = self.tail_pages[prevUpdatePages[PAGE_NUM_COL]+NUM_DEFAULT_COLUMNS+i].grab_slot(prevUpdatePages[SLOT_NUM_COL])
                     
-            new_record_col[SCHEMA_ENCODING_COLUMN] = int(new_schema_string)
+    #         new_record_col[SCHEMA_ENCODING_COLUMN] = int(new_schema_string)
  
-        # If base record had no updates
-        else:
-            # Point new record's indirection to base record 
-            new_record_col[INDIRECTION_COLUMN] = base_record.rid
+    #     # If base record had no updates
+    #     else:
+    #         # Point new record's indirection to base record 
+    #         new_record_col[INDIRECTION_COLUMN] = base_record.rid
 
-        # Set base record's indirection column to new record's RID
-        base_page_location = self.page_directory[base_record.rid]
-        base_page_num = base_page_location[PAGE_NUM_COL]
-        base_page_slot = base_page_location[SLOT_NUM_COL]
-        self.base_pages[base_page_num + INDIRECTION_COLUMN].update(new_rid, base_page_slot)
-        base_record.columns[INDIRECTION_COLUMN] = new_rid
+    #     # Set base record's indirection column to new record's RID
+    #     base_page_location = self.page_directory[base_record.rid]
+    #     base_page_num = base_page_location[PAGE_NUM_COL]
+    #     base_page_slot = base_page_location[SLOT_NUM_COL]
+    #     self.base_pages[base_page_num + INDIRECTION_COLUMN].update(new_rid, base_page_slot)
+    #     base_record.columns[INDIRECTION_COLUMN] = new_rid
 
-        # Write new record to tail page
-        page_dict = self.calculate_tail_page_numbers(self.num_columns + NUM_DEFAULT_COLUMNS, new_rid)
-        page_range_num = page_dict[PAGE_RANGE_COL]
-        page_num = page_dict[PAGE_NUM_COL]
-        slot_num = page_dict[SLOT_NUM_COL]
+    #     # Write new record to tail page
+    #     page_dict = self.calculate_tail_page_numbers(self.num_columns + NUM_DEFAULT_COLUMNS, new_rid)
+    #     page_range_num = page_dict[PAGE_RANGE_COL]
+    #     page_num = page_dict[PAGE_NUM_COL]
+    #     slot_num = page_dict[SLOT_NUM_COL]
 
-        for i in range(len(new_record_col)):
-            if (new_record_col[i] != None):
-                self.tail_pages[page_num + i].write(new_record_col[i])
-            else:
-                self.tail_pages[page_num+i].write(0)
+    #     for i in range(len(new_record_col)):
+    #         if (new_record_col[i] != None):
+    #             self.tail_pages[page_num + i].write(new_record_col[i])
+    #         else:
+    #             self.tail_pages[page_num+i].write(0)
 
-        # Update page directory
-        directory = [page_range_num, page_num, slot_num]
-        self.page_directory[new_rid] = directory
+    #     # Update page directory
+    #     directory = [page_range_num, page_num, slot_num]
+    #     self.page_directory[new_rid] = directory
 
-        # Decrement tail rid
-        self.tail_rid -= 1
+    #     # Decrement tail rid
+    #     self.tail_rid -= 1
 
-        return True
-
-
-    def sum(self, start_range, end_range, col_index_to_add):
-        total = 0
-
-        record_list = self.index.locate_range(start_range, end_range, column = 0)
-
-        # No records found within range
-        if len(record_list) == 0:
-            return False
-
-        for record in record_list:
-            rid = record.rid
-
-            #Grab page locations from page_directory
-            pages = self.page_directory[rid] 
-
-            indirection = self.base_pages[pages[PAGE_NUM_COL]+INDIRECTION_COLUMN].grab_slot(pages[SLOT_NUM_COL])
-
-            # If updates exist
-            if indirection != NULL_PTR:
-                pages_tail = self.page_directory[indirection]
-
-                schema = self.tail_pages[pages_tail[PAGE_NUM_COL]+SCHEMA_ENCODING_COLUMN].grab_slot(pages_tail[SLOT_NUM_COL])
-                leadingZeros = "0" * self.num_columns
-                schema_string = leadingZeros + str(schema)
-                num = self.num_columns * -1
-                schema_string = schema_string[num:]
-
-                # If the column we want has been updated
-                if schema_string[col_index_to_add] == "1":
-                    val_to_add = self.tail_pages[pages_tail[PAGE_NUM_COL] + NUM_DEFAULT_COLUMNS + col_index_to_add].grab_slot(pages_tail[SLOT_NUM_COL])
-                    total = total + val_to_add
-                # Use values from base pages
-                else:
-                    total = total + self.base_pages[pages[PAGE_NUM_COL] + NUM_DEFAULT_COLUMNS + col_index_to_add].grab_slot(pages[SLOT_NUM_COL])
-            # Use values from base pages
-            else:
-                total = total + self.base_pages[pages[PAGE_NUM_COL] + NUM_DEFAULT_COLUMNS + col_index_to_add].grab_slot(pages[SLOT_NUM_COL])
-
-        return total
+    #     return True
 
 
-    def delete(self, key):
-        try:
-            record = self.index.locate(column = 0, value = key)[0]
+    # def sum(self, start_range, end_range, col_index_to_add):
+    #     total = 0
 
-            record.rid = None
-            return True
-        except:
-            return False
+    #     record_list = self.index.locate_range(start_range, end_range, column = 0)
+
+    #     # No records found within range
+    #     if len(record_list) == 0:
+    #         return False
+
+    #     for record in record_list:
+    #         rid = record.rid
+
+    #         #Grab page locations from page_directory
+    #         pages = self.page_directory[rid] 
+
+    #         indirection = self.base_pages[pages[PAGE_NUM_COL]+INDIRECTION_COLUMN].grab_slot(pages[SLOT_NUM_COL])
+
+    #         # If updates exist
+    #         if indirection != NULL_PTR:
+    #             pages_tail = self.page_directory[indirection]
+
+    #             schema = self.tail_pages[pages_tail[PAGE_NUM_COL]+SCHEMA_ENCODING_COLUMN].grab_slot(pages_tail[SLOT_NUM_COL])
+    #             leadingZeros = "0" * self.num_columns
+    #             schema_string = leadingZeros + str(schema)
+    #             num = self.num_columns * -1
+    #             schema_string = schema_string[num:]
+
+    #             # If the column we want has been updated
+    #             if schema_string[col_index_to_add] == "1":
+    #                 val_to_add = self.tail_pages[pages_tail[PAGE_NUM_COL] + NUM_DEFAULT_COLUMNS + col_index_to_add].grab_slot(pages_tail[SLOT_NUM_COL])
+    #                 total = total + val_to_add
+    #             # Use values from base pages
+    #             else:
+    #                 total = total + self.base_pages[pages[PAGE_NUM_COL] + NUM_DEFAULT_COLUMNS + col_index_to_add].grab_slot(pages[SLOT_NUM_COL])
+    #         # Use values from base pages
+    #         else:
+    #             total = total + self.base_pages[pages[PAGE_NUM_COL] + NUM_DEFAULT_COLUMNS + col_index_to_add].grab_slot(pages[SLOT_NUM_COL])
+
+    #     return total
+
+
+    # def delete(self, key):
+    #     try:
+    #         record = self.index.locate(column = 0, value = key)[0]
+
+    #         record.rid = None
+    #         return True
+    #     except:
+    #         return False

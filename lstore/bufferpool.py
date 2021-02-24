@@ -20,8 +20,8 @@ class BufferPool:
         if len(self.pool) == 0:
             print("BufferPool is empty")
 
-        for bp in self.pool.values():
-            bp.print_page()
+        for frame in self.pool.values():
+            frame.print_page()
 
 
     def add(self, buffer_page):
@@ -67,12 +67,12 @@ class BufferPool:
 
     # Iterate through all pages in buffer pool and try to enqueue in LRU Queue
     def enqueue_pages(self):
-        for bp in self.pool.values():
-            if bp not in self.lru_queue.queue:
-                self.lru_queue.add(bp)
+        for frame in self.pool.values():
+            if frame not in self.lru_queue.queue:
+                self.lru_queue.add(frame)
 
 
-class BufferPage:
+class Frame:
 
     def __init__(self, page_num, page, table):
         self.key = page_num
@@ -96,8 +96,8 @@ class LRU_Queue:
         self.queue = []
 
     def print_queue(self):
-        for bp in self.queue:
-            bp.print_page()
+        for frame in self.queue:
+            frame.print_page()
 
         print("\n")
 
