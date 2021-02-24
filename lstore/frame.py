@@ -8,6 +8,7 @@ class Frame:
         self.page = page
         self.table = table
         self.outstanding_transactions = 0
+        # self.num_columns = num_col
         self.is_dirty = False
 
 
@@ -26,6 +27,65 @@ class Frame:
     
     def clean_page(self):
         self.is_dirty = False
+
+
+    # def write_value(self, val):
+    #     self.page.write(val)
+    #     self.is_dirty = True
+
+
+    # def read_frame(self, path):
+    #     page_num = self.key
+    #     num_col = self.num_columns #
+        
+    #     seek_offset = int(page_num/num_col)
+    #     seek_mult = PAGE_CAPACITY_IN_BYTES
+
+    #     file_num = page_num % num_cols
+    #     file_name = self.path + "/" + table_name + "_" + str(file_num) + ".bin"
+
+    #     file = open(file_name, "rb")
+    #     file.seek(seek_offset * seek_mult)
+    #     data = file.read(seek_mult)
+    #     file.close()
+
+
+    #     self.page.data = data
+        
+
+
+    # def write_frame(self, path):
+
+    #     page_num = self.key
+    #     num_col = self.num_columns #
+        
+    #     seek_offset = int(page_num/num_col)
+        
+    #     seek_mult = PAGE_CAPACITY_IN_BYTES
+        
+
+    #     file_num = page_num % num_col
+    #     page  = self.page
+
+    #     file_name = path + "/" + self.table_name + "_" + str(file_num) + ".bin"
+    #     #print(file_name)
+
+    #     mode = "w+b"
+    #     if os.path.exists(file_name):
+    #         mode = "r+b"
+            
+    #     file= open(file_name, mode) #binary
+
+    #     file.seek(seek_offset * seek_mult)
+    #     file.write(page.data)
+    #     #page.display_internal_memory()
+    #     #print(page.data)
+    #     file.close()
+        
+    #     self.is_dirty = False
+
+    #     print(page_num, file_num)
+    #     #page.display_internal_memory()
 
 
     def print_page(self):

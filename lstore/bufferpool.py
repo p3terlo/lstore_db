@@ -13,7 +13,7 @@ class BufferPool:
         self.number_current_pages = 0
 
 
-    def get_page(self, page_num: int) -> None:
+    def grab_page(self, page_num: int) -> None:
         #TODO: Increment Pin count 
         if page_num not in self.frame_cache:
             raise KeyError(f"Invalid Page: {page_num}. Not in Queue.")
@@ -45,7 +45,7 @@ class BufferPool:
             frame.print_page()
 
 
-    def evict_recently_used(self, use_most_recently_used = True):    
+    def evict_recently_used(self, use_most_recently_used = False):    
 
         # Check the outstanding transactions of the least recently used frame
         evicted_frame_pin_count = next(
@@ -60,12 +60,10 @@ class BufferPool:
             key = lru_frame.key
             is_dirty = lru_frame.is_dirty
 
-            
             if (is_dirty):
-                # Write page to memory, then pop
-                # lru_frame.clean_page()
-                pass
-                # return SUCCESS
+                print("Persisting LRU Frame ", key)
+                lru_frame.write_frame(self.path)
+                
 
 
     def pin_page(self, page_num):
@@ -82,21 +80,21 @@ class BufferPool:
         print(f"Checking if Page {page_id} exists inside the bufferpool: ", page_id in self.frame_cache)
 
         return page_id in self.frame_cache
- 
 
+    def read_page(self, table_name, page_num, num_cols):
+        seek_offset = int(page_num/num_cols)
+        seek_mult = PAGE_CAPACITY_IN_BYTES
 
+        file_num = page_num % num_cols
+        file_name = self.path + "/" + table_name + "_" + str(file_num) + ".bin"
 
+        file = open(file_name, "rb")
+        file.seek(seek_offset * seek_mult)
+        data = file.read(seek_mult)
 
-# # RUNNER
-# # initializing our frame_cache with the capacity of 2
-# frame_cache = LRUframe_Cache(3) 
- 
- 
-# frame_cache.put(1, "Frame 1")
-# frame_cache.put(2, "Frame 2")
-# frame_cache.put(3, "Frame 3")
-# frame_cache.put(4, "Frame 4")
-# frame_cache.get(2)
+        #print(data)
+        file.close()
 
-# print(frame_cache.frame_cache)
-
+        test_page = Page(page_num)
+        test_page.data = data
+        test_page.display_internal_memory()
