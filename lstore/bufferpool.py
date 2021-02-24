@@ -26,7 +26,7 @@ class BufferPool:
         print(f"Attempting to add page: {page.page_num} to Buffer Queue")
         
         if (self.number_current_pages >= self.capacity):
-            self.evict_least_recently_used()
+            self.evict_recently_used()
 
         frame = Frame(page.page_num, page, table_name)
         
@@ -45,15 +45,15 @@ class BufferPool:
             frame.print_page()
 
 
-    def evict_least_recently_used(self):    
+    def evict_recently_used(self, use_most_recently_used = True):    
 
         # Check the outstanding transactions of the least recently used frame
-        last_frame_pin_count = next(
+        evicted_frame_pin_count = next(
             reversed(self.frame_cache.values())).outstanding_transactions
                 
-        if last_frame_pin_count is 0:
+        if evicted_frame_pin_count is 0:
                 
-            _, lru_frame = self.frame_cache.popitem(last = False)
+            _, lru_frame = self.frame_cache.popitem(last = use_most_recently_used)
             self.number_current_pages -= 1
             print(f"Evicting LRU frame: {lru_frame.page.page_num}")
         

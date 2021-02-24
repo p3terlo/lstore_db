@@ -24,11 +24,11 @@ class TestBufferPool(unittest.TestCase):
 
         seed(3562901)
 
-        for i in range(0, 3):
+        for i in range(0, 60 * 129):
             key = 92106429 + randint(0, 9000)
             while key in records:
                 key = 92106429 + randint(0, 9000)
-            records[key] = [key, 3, 3, 3, 3]
+            records[key] = [key, randint(0, 20), randint(0, 20), randint(0, 20), randint(0, 20)]
             self.query.insert(*records[key])
             print('inserted', records[key])
 
