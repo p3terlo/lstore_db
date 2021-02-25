@@ -89,15 +89,15 @@ class Table:
 
         return Record(rid, record_key, record_col)
 
-    def sample_read(self):
+    # def sample_read(self):
 
-        bufferpool = self.bufferpool
+    #     bufferpool = self.bufferpool
 
-        for i in range(17):
-            bufferpool.read_page(self.name, i, self.num_columns + NUM_DEFAULT_COLUMNS)
+    #     for i in range(8):
+    #         bufferpool.read_page(self.name, i, self.num_columns + NUM_DEFAULT_COLUMNS)
             
         
-        print("done")
+    #     print("done")
 
     def add(self, *columns):
         #initializing values
@@ -125,41 +125,48 @@ class Table:
         for i in range(total_columns):
 
             current_page = starting_page_num + i
-
-            print("Attempting to write to page : ", current_page)
-
             page_is_in_bufferpool = self.bufferpool.check_pool(current_page)
+            
+            
+            isPageOnDisk = True
 
             # If page not in bufferpool
             if not page_is_in_bufferpool:
+                print(f"Current page: {current_page} not in Bufferpool.")
                 # Retrieve page from memory
 
                 # If page doesn't exist in memory, create page
-                print(f"Page {current_page} does not exist in bufferpool. Adding Page {current_page}.")
-                page = Page(self.bufferpool.total_db_pages)
-                print(f"Created Page {current_page}")
-                self.bufferpool.total_db_pages += 1
 
-                # Add page to bufferpool
-                self.bufferpool.add_page(page, self.name)
-                print(f"Added Page {current_page} to Bufferpool!")
+                page = self.bufferpool.read_page_from_disk(self.name, current_page, total_columns)
+                
+                if page is None:
+                    isPageOnDisk = False    
+                    page = Page(self.bufferpool.total_db_pages)
+                    self.bufferpool.total_db_pages += 1
+                    
+                self.bufferpool.add_page(page, self.name, total_columns)
 
-            print("Writing to page...")
-            page = self.bufferpool.get_page(current_page, total_columns).page
+
+            frame = self.bufferpool.get_page(current_page)
+            page = frame.page
 
             # Pin page, write to memory, unpin page, set page to dirty
             self.bufferpool.pin_page(current_page)
-            page.write(record_col[i])
-            self.bufferpool.unpin_page(current_page)
-            # self.bufferpool.pool[current_page].dirty_page()
 
+            if isPageOnDisk:
+                print("going into special write slot function")
+                page.write_slot(rid, record_col[i])
+            else:
+                page.write(record_col[i])
+
+            self.bufferpool.unpin_page(current_page)
+            frame.make_dirty()
 
         # Update page directory
         directory = [page_range_num, starting_page_num, slot_num]
         self.page_directory[rid] = directory
 
         self.base_rid += 1
-
 
         
     def fetch_page(self, key):

@@ -1,8 +1,8 @@
+import os
+
 from lstore.config import *
 from lstore.table import Table
 from lstore.bufferpool import BufferPool
-
-
 
 class Database():
 

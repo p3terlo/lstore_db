@@ -1,8 +1,9 @@
+import os
+
 from collections import OrderedDict
-
-
 from lstore.config import *
 from lstore.frame import Frame
+from lstore.page import Page
 
 
 class BufferPool: 
@@ -20,7 +21,7 @@ class BufferPool:
 
 
 
-    def get_page(self, page_num: int, total_columns: int) -> None:
+    def get_page(self, page_num: int) -> None:
         #TODO: Increment Pin count 
         if page_num not in self.frame_cache:
             raise KeyError(f"Invalid Page: {page_num}. Not in Queue.")
@@ -29,13 +30,13 @@ class BufferPool:
             return self.frame_cache[page_num]
  
 
-    def add_page(self, page, table_name: str) -> None:
-        print(f"Attempting to add page: {page.page_num} to Buffer Queue")
+    def add_page(self, page, table_name: str, num_col: int) -> None:
+        # print(f"Attempting to add page: {page.page_num} to Buffer Queue")
         
         if (self.number_current_pages >= self.capacity):
             self.evict_recently_used()
 
-        frame = Frame(page.page_num, page, table_name)
+        frame = Frame(page.page_num, page, table_name, num_col)
         
         self.number_current_pages += 1
         self.frame_cache[page.page_num] = frame
@@ -55,21 +56,21 @@ class BufferPool:
     def evict_recently_used(self, use_most_recently_used = False):    
 
         # Check the outstanding transactions of the least recently used frame
-        evicted_frame_pin_count = next(
-            reversed(self.frame_cache.values())).outstanding_transactions
+        # evicted_frame_pin_count = next(
+        #     reversed(self.frame_cache.values())).outstanding_transactions
                 
-        if evicted_frame_pin_count is 0:
+        # if evicted_frame_pin_count == 0:
                 
-            _, lru_frame = self.frame_cache.popitem(last = use_most_recently_used)
-            self.number_current_pages -= 1
-            print(f"Evicting LRU frame: {lru_frame.page.page_num}")
-        
-            key = lru_frame.key
-            is_dirty = lru_frame.is_dirty
+        _, lru_frame = self.frame_cache.popitem(last = use_most_recently_used)
+        self.number_current_pages -= 1
+        print(f"Evicting LRU frame: {lru_frame.page.page_num}")
+    
+        key = lru_frame.key
+        is_dirty = lru_frame.is_dirty
 
-            # if (is_dirty):
-            #     print("Persisting LRU Frame ", key)
-            #     lru_frame.write_frame(self.path)
+        if (is_dirty):
+            print("Persisting LRU Frame ", key)
+            lru_frame.write_frame(self.path)
                 
 
     def pin_page(self, page_num):
@@ -83,23 +84,28 @@ class BufferPool:
 
 
     def check_pool(self, page_id):
-        print(f"Checking if Page {page_id} exists inside the bufferpool: ", page_id in self.frame_cache)
+        # print(f"Checking if Page {page_id} exists inside the bufferpool: ", page_id in self.frame_cache)
 
         return page_id in self.frame_cache
 
 
-    # def read_page(self, table_name, page_num, num_cols):
-    #     seek_offset = int(page_num/num_cols)
-    #     seek_mult = PAGE_CAPACITY_IN_BYTES
+    def read_page_from_disk(self, table_name, page_num, num_cols):
+        print(f"Reading {table_name}: {page_num} from disk...")
+        seek_offset = int(page_num/num_cols)
+        seek_mult = PAGE_CAPACITY_IN_BYTES
 
-    #     file_num = page_num % num_cols
-    #     file_name = self.path + "/" + table_name + "_" + str(file_num) + ".bin"
+        file_num = page_num % num_cols
+        file_name = self.path + "/" + table_name + "_" + str(file_num) + ".bin"
 
-    #     file = open(file_name, "rb")
-    #     file.seek(seek_offset * seek_mult)
-    #     data = file.read(seek_mult)
+        if not os.path.exists(file_name):
+            print(f"FAILED reading {table_name}:{page_num} from disk.\n")
+            return None
+        else:
+            page = Page(page_num)
+            with open(file_name, "rb") as f:
+                f.seek(seek_offset * seek_mult)
+                data = f.read(seek_mult)
+                page.data = data
 
-    #     #print(data)
-    #     file.close()
-
-
+            print(f"Successfully read {table_name}: {page_num} from disk.\n")
+            return page
