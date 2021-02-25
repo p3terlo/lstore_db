@@ -15,8 +15,8 @@ class TestBufferPool(unittest.TestCase):
     def setUp(self):
 
         self.database = Database()
-        self.grades_table = self.database.create_table('Grades', 5, 0, self.database.bufferpool)
-
+        self.grades_table = self.database.create_table('Grades', 5, 0)
+        self.grades_table.pass_bufferpool(self.database.bufferpool)
     
     def test_add(self):
         self.query = Query(self.grades_table)
@@ -24,7 +24,7 @@ class TestBufferPool(unittest.TestCase):
 
         seed(3562901)
 
-        for i in range(0, 11):
+        for i in range(0, 3):
             key = 92106429 + randint(0, 9000)
             while key in records:
                 key = 92106429 + randint(0, 9000)

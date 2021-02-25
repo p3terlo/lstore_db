@@ -30,6 +30,7 @@ class Page:
         
       
     def write(self, value):
+        # print("write: Entering Write!")
         val_as_bytes = value.to_bytes(INTEGER_CAPACITY_IN_BYTES, 'big')
         slot_num = self.num_records * INTEGER_CAPACITY_IN_BYTES
 
