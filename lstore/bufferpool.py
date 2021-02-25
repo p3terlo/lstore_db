@@ -20,7 +20,6 @@ class BufferPool:
         self.path = path
 
 
-
     def get_page(self, page_num: int) -> None:
         #TODO: Increment Pin count 
         if page_num not in self.frame_cache:
@@ -48,9 +47,9 @@ class BufferPool:
     def print_pool(self):
         if len(self.frame_cache) == 0:
             print("BufferPool is empty")
-
-        for frame in self.frame_cache.values():
-            frame.print_page()
+        else:
+            for frame in self.frame_cache.values():
+                frame.print_page()
 
 
     def evict_recently_used(self, use_most_recently_used = False):    
@@ -85,7 +84,6 @@ class BufferPool:
 
     def check_pool(self, page_id):
         # print(f"Checking if Page {page_id} exists inside the bufferpool: ", page_id in self.frame_cache)
-
         return page_id in self.frame_cache
 
 
@@ -108,4 +106,6 @@ class BufferPool:
                 page.data = data
 
             print(f"Successfully read {table_name}: {page_num} from disk.\n")
+            # FIXME Doesn't display anything, page probably not being read in correctly
+            page.display_internal_memory()
             return page

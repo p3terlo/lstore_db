@@ -75,10 +75,6 @@ class Page:
         integer = self.broken_bytes_to_int(byte_val)
         return integer
 
-
-    
-        
-      
       
     def update(self, value, slot):
         slot_num = slot * 8

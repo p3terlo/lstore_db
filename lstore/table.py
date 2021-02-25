@@ -100,7 +100,8 @@ class Table:
     #     print("done")
 
     def add(self, *columns):
-        #initializing values
+
+        # Initialize values
         rid = self.base_rid
         record_key = columns[self.key]
 
@@ -113,7 +114,6 @@ class Table:
         # Key -> record -> RID
         self.index.insert(record_key, base_record) #update
 
-
         # Get page number from RID
         page_dict = self.calculate_base_page_numbers(total_columns, rid)
 
@@ -121,28 +121,28 @@ class Table:
         starting_page_num = page_dict[PAGE_NUM_COL]
         page_range_num = page_dict[PAGE_RANGE_COL]
 
+        # print(f"Starting page num: {starting_page_num}")
+
         # Write record to pages
         for i in range(total_columns):
 
             current_page = starting_page_num + i
             page_is_in_bufferpool = self.bufferpool.check_pool(current_page)
-            
-            
-            isPageOnDisk = True
+            isPageOnDisk = False
 
             # If page not in bufferpool
             if not page_is_in_bufferpool:
-                print(f"Current page: {current_page} not in Bufferpool.")
+                print(f"Page {current_page} not in Bufferpool")
+
                 # Retrieve page from memory
-
                 # If page doesn't exist in memory, create page
-
                 page = self.bufferpool.read_page_from_disk(self.name, current_page, total_columns)
                 
-                if page is None:
-                    isPageOnDisk = False    
+                if page is None:   
                     page = Page(self.bufferpool.total_db_pages)
                     self.bufferpool.total_db_pages += 1
+                else:
+                    isPageOnDisk = True
                     
                 self.bufferpool.add_page(page, self.name, total_columns)
 
@@ -154,7 +154,6 @@ class Table:
             self.bufferpool.pin_page(current_page)
 
             if isPageOnDisk:
-                print("going into special write slot function")
                 page.write_slot(rid, record_col[i])
             else:
                 page.write(record_col[i])
