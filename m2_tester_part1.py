@@ -6,7 +6,7 @@ from random import choice, randint, sample, seed
 #init()
 
 db = Database()
-db.open('./ECS165alejandroTest')
+db.open('./ECS165)
 
 grades_table = db.create_table('Grades', 5, 0)
 query = Query(grades_table)
@@ -14,7 +14,7 @@ query = Query(grades_table)
 # repopulate with random data
 records = {}
 seed(3562901)
-for i in range(0, 10):
+for i in range(0, 9):
     key = 92106429 + i
     records[key] = [key, randint(0, 20), randint(0, 20), randint(0, 20), randint(0, 20)]
     query.insert(*records[key])
