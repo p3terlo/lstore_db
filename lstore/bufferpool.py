@@ -96,16 +96,11 @@ class BufferPool:
         file_name = self.path + "/" + table_name + "_" + str(file_num) + ".bin"
 
         if not os.path.exists(file_name):
-            print(f"FAILED reading {table_name}:{page_num} from disk.\n")
-            return None
+            assert FileNotFoundError(f"FAILED reading {table_name}: {page_num} from disk.\n")
         else:
             page = Page(page_num)
             with open(file_name, "rb") as f:
                 f.seek(seek_offset * seek_mult)
                 data = f.read(seek_mult)
-                page.data = data
-
-            print(f"Successfully read {table_name}: {page_num} from disk.\n")
-            # FIXME Doesn't display anything, page probably not being read in correctly
-            page.display_internal_memory()
+                page.data = bytearray(data)
             return page

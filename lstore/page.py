@@ -16,7 +16,7 @@ class Page:
 
     def write_slot(self, rid, value): # needs to be tested
         val_as_bytes = value.to_bytes(INTEGER_CAPACITY_IN_BYTES, 'big')
-        slot_start = rid % int(PAGE_CAPACITY_IN_BYTES/INTEGER_CAPACITY_IN_BYTES)
+        slot_start = rid % int(PAGE_CAPACITY_IN_BYTES/INTEGER_CAPACITY_IN_BYTES) - 1
 
         slot_num = slot_start * INTEGER_CAPACITY_IN_BYTES
 
