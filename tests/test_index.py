@@ -124,13 +124,18 @@ class TestIndex(unittest.TestCase):
 
         self.assertEqual(number_of_records_inserted, number_of_records_in_key_column_index)
 
+
     def test_locate(self):
         record_key = 92110441
         record_RID = [37]
-        record_not_existing = 5045
-
+        
         self.assertEqual(record_RID, self.index_for_table.locate(column=KEY_COLUMN, value=record_key))
-        self.assertEqual(None, self.index_for_table.locate(column=KEY_COLUMN, value=record_not_existing))
+        
+
+    def test_locate_invalid(self):
+        value_not_existing_output = [-1]
+        record_not_existing = 5045
+        self.assertEqual(value_not_existing_output, self.index_for_table.locate(column=KEY_COLUMN, value=record_not_existing))
 
 
     def test_locate_range(self):
@@ -146,8 +151,10 @@ class TestIndex(unittest.TestCase):
     def test_locate_range_query_window_out_of_range(self):        
         non_existent_low = 0
         non_existent_high = 5
+        value_not_existing_output = [-1]
+        returned_value = self.index_for_table.locate_range(begin=non_existent_low, end=non_existent_high, column=KEY_COLUMN)
 
-        self.assertEqual([], self.index_for_table.locate_range(begin=non_existent_low, end=non_existent_high, column=KEY_COLUMN))
+        self.assertEqual(value_not_existing_output, returned_value)
 
         
     @unittest.skip(" 'We are going to assume index_for_table is created at start of Table instantiation for Milestone 1' - TA")
@@ -204,5 +211,20 @@ class TestIndex(unittest.TestCase):
         self.assertEqual(sorted_values, self.index_for_table.locate_range(begin=1, end=5, column=0))
 
 
-    
-    
+    def test_update(self):
+            key = 5
+            value = 14
+            second_value = 23
+            new_value = 20
+            
+            self.index_for_table.insert(key, value)
+            self.index_for_table.insert(key, second_value)
+            print(self.index_for_table.locate(column=0, value=key))
+
+            self.index_for_table.update(key, value, new_value)
+
+            print(self.index_for_table.locate(column=0, value=key))
+
+            
+            self.assertEqual([second_value, new_value], self.index_for_table.locate(value=key))
+        
