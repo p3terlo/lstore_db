@@ -12,7 +12,7 @@ class BufferPool:
         self.path = ""
         self.frame_cache = OrderedDict()
         self.capacity = capacity
-        self.total_db_pages = 0
+        self.page_identifier = 0
         self.number_current_pages = 0
         
         
@@ -20,28 +20,68 @@ class BufferPool:
         self.path = path
 
 
-    def get_page(self, page_num: int) -> None:
-        #TODO: Increment Pin count 
+    def get_frame_from_pool(self, table_name: str, number_columns: int, page_num: int):
+        """
+        Look in Bufferpool for page, if not found then search disk, if not found create page.
+        """
+
         if page_num not in self.frame_cache:
-            raise KeyError(f"Invalid Page: {page_num}. Not in Queue.")
+            if (self.number_current_pages >= self.capacity):
+                self.evict_recently_used()
+                self.number_current_pages += 1
+            print("Entered: Page not in pool ...")
+
+            frame = self.read_page_from_disk(table_name, number_columns, page_num)
+            if frame is None:
+                print("Entered: create_new_page ...")
+                frame = self.create_new_page(table_name, number_columns)            
+
+            self.frame_cache[frame.page.page_num] = frame
+            self.frame_cache.move_to_end(frame.page.page_num)
+            
+            print(f"Placed page: {frame.page.page_num} inside frame")
+
+            # raise KeyError(f"Invalid Page: {page_num}. Not in Queue.")
         else:
+            print("Entered: frame IN pool ...")
             self.frame_cache.move_to_end(page_num)
             return self.frame_cache[page_num]
  
+ 
+    def read_page_from_disk(self, table_name: str, num_columns: int, page_num: int) -> Frame:
+        """
+        Given Table Name, its number of columns and it's page number, we grab page from disk.
+        """
 
-    def add_page(self, page, table_name: str, num_col: int) -> None:
-        # print(f"Attempting to add page: {page.page_num} to Buffer Queue")
-        
-        if (self.number_current_pages >= self.capacity):
-            self.evict_recently_used()
+        print(f"Reading {table_name}: {page_num} from disk...")
+        seek_offset = int(page_num/num_columns)
+        seek_mult = PAGE_CAPACITY_IN_BYTES
 
-        frame = Frame(page.page_num, page, table_name, num_col)
-        
-        self.number_current_pages += 1
-        self.frame_cache[page.page_num] = frame
-        self.frame_cache.move_to_end(page.page_num)
+        file_num = page_num % num_columns
+        print(f"File Number: {file_num}")
+        file_name = self.path + "/" + table_name + "_" + str(file_num) + ".bin"
 
-        print(f"Placed page: {page.page_num} inside frame")
+        if not os.path.exists(file_name):
+            print(f"FAILED reading {table_name}: {page_num} from disk.\n")
+            return None
+        else:
+            page = Page(page_num)
+            with open(file_name, "rb") as f:
+                f.seek(seek_offset * seek_mult)
+                data = f.read(seek_mult)
+                page.data = bytearray(data)
+
+            frame = Frame(page_num, page, table_name, num_columns)            
+            return frame
+
+
+    def create_new_page(self, table_name: str, num_columns: int) -> Frame:        
+        empty_page = Page(page_num=self.page_identifier)
+        self.page_identifier += 1
+
+        frame = Frame(empty_page.page_num, empty_page, table_name, num_columns)
+
+        return frame
 
 
     def print_pool(self):
@@ -72,35 +112,9 @@ class BufferPool:
             lru_frame.write_frame(self.path)
                 
 
-    def pin_page(self, page_num):
-        frame = self.get_page(page_num)
-        frame.pin_page()
-
-
-    def unpin_page(self, page_num):
-        frame = self.get_page(page_num)
-        frame.unpin_page()
-
-
     def check_pool(self, page_id):
         # print(f"Checking if Page {page_id} exists inside the bufferpool: ", page_id in self.frame_cache)
         return page_id in self.frame_cache
 
 
-    def read_page_from_disk(self, table_name, page_num, num_cols):
-        print(f"Reading {table_name}: {page_num} from disk...")
-        seek_offset = int(page_num/num_cols)
-        seek_mult = PAGE_CAPACITY_IN_BYTES
-
-        file_num = page_num % num_cols
-        file_name = self.path + "/" + table_name + "_" + str(file_num) + ".bin"
-
-        if not os.path.exists(file_name):
-            assert FileNotFoundError(f"FAILED reading {table_name}: {page_num} from disk.\n")
-        else:
-            page = Page(page_num)
-            with open(file_name, "rb") as f:
-                f.seek(seek_offset * seek_mult)
-                data = f.read(seek_mult)
-                page.data = bytearray(data)
-            return page
+    

@@ -41,16 +41,27 @@ class TestBufferPool(unittest.TestCase):
         self.database.bufferpool.print_pool()
 
 
+    # @unittest.SkipTest
     def test_read_page_from_disk(self):
         page_number = 4
         number_columns = 8
         table_name = "Grades"
         self.grades_table.bufferpool.assign_path("tests/files")
-        read_page = self.grades_table.bufferpool.read_page_from_disk(table_name, page_number, number_columns)
-        self.assertIs(type(read_page), Page)
+        read_frame = self.grades_table.bufferpool.read_page_from_disk(table_name, number_columns, page_number)
+        self.assertIs(type(read_frame), Frame)
 
 
-    @unittest.SkipTest
+    def test_read_page_from_disk_fail(self):
+
+        wrong_page_number = -69696969
+        number_columns = 8
+        table_name = "Grades"
+        self.grades_table.bufferpool.assign_path("tests/files")
+        read_frame = self.grades_table.bufferpool.read_page_from_disk(table_name, number_columns, wrong_page_number)
+        self.assertIs(type(read_frame), type(None))
+        
+
+    # @unittest.SkipTest
     def test_add_page(self):
         pass
 
@@ -63,12 +74,15 @@ class TestBufferPool(unittest.TestCase):
         number_columns = 8
         table_name = "Grades"
         self.grades_table.bufferpool.assign_path("tests/files")
-        read_page = self.grades_table.bufferpool.read_page_from_disk(table_name, page_number, number_columns)
-        read_page.display_internal_memory()
-        read_page.write_slot(RID, new_value)
-        read_page.display_internal_memory()
+        read_frame = self.grades_table.bufferpool.read_page_from_disk(table_name, number_columns, page_number)
+        print("Printing Page before write: \n")
+        read_frame.page.display_internal_memory()
+        read_frame.page.write_slot(RID, new_value)
+        print("\nPrinting Page After write: \n")
+        read_frame.page.display_internal_memory()
 
 
+    # @unittest.SkipTest
     def test_write_slot_empty(self):
         RID = 3
         page = Page(1)
@@ -77,5 +91,11 @@ class TestBufferPool(unittest.TestCase):
         page.display_internal_memory()
 
 
+    # @unittest.SkipTest
+    def test_create_new_page(self):
+        number_columns = 8
+        table_name = "Grades"
+        read_frame = self.grades_table.bufferpool.create_new_page(table_name, number_columns)
+        self.assertIs(type(read_frame), Frame)
 
  

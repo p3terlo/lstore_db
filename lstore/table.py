@@ -127,39 +127,17 @@ class Table:
         for i in range(total_columns):
 
             current_page = starting_page_num + i
-            page_is_in_bufferpool = self.bufferpool.check_pool(current_page)
-            isPageOnDisk = False
-
-            # If page not in bufferpool
-            if not page_is_in_bufferpool:
-                print(f"Page {current_page} not in Bufferpool")
-
-                # Retrieve page from memory
-                # If page doesn't exist in memory, create page
-                page = self.bufferpool.read_page_from_disk(self.name, current_page, total_columns)
-                
-                if page is None:   
-                    page = Page(self.bufferpool.total_db_pages)
-                    self.bufferpool.total_db_pages += 1
-                else:
-                    isPageOnDisk = True
-                    
-                self.bufferpool.add_page(page, self.name, total_columns)
-
-
-            frame = self.bufferpool.get_page(current_page)
-            page = frame.page
-
-            # Pin page, write to memory, unpin page, set page to dirty
-            self.bufferpool.pin_page(current_page)
-
-            if isPageOnDisk:
-                page.write_slot(rid, record_col[i])
-            else:
-                page.write(record_col[i])
-
-            self.bufferpool.unpin_page(current_page)
+            print(f"Attepting to write to --> {self.name}: {total_columns}: {current_page}")
+            frame = self.bufferpool.get_frame_from_pool(self.name, total_columns, current_page)
+            frame.pin_page()
+            print("Retrieved Frame!!")
+            frame.page.display_internal_memory()
+            frame.page.write_slot(rid, record_col[i])
             frame.make_dirty()
+            frame.page.display_internal_memory()
+            frame.unpin_page()
+            print("Write Done!")
+           
 
         # Update page directory
         directory = [page_range_num, starting_page_num, slot_num]

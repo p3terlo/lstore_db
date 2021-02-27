@@ -83,7 +83,4 @@ class Page:
             val_to_bytes = value.to_bytes(8, 'big') #converting 64bit int to bytes
 
             for i in range(8):
-                self.data[slot_num + i] = val_to_bytes[i]
-
-        pass
-      
+                self.data[slot_num + i] = val_to_bytes[i]      
