@@ -25,18 +25,28 @@ print("Insert finished")
 grades_table.bufferpool.print_pool()
 # grades_table.sample_read()
 
-"""
+
+print("----------------------------------------------------------")
+
 for key in keys:
     record = query.select(key, 0, [1, 1, 1, 1, 1])[0]
+
     error = False
     for i, column in enumerate(record.columns):
         if column != records[key][i]:
             error = True
     if error:
         print('select error on', key, ':', record, ', correct:', records[key])
-    # else:
-    #     print('select on', key, ':', record)
+    else:
+        print('select on', key, ':', record)
 print("Select finished")
+
+print("----------------------------------------------------------")
+
+updated_columns = [None, None, None, None, 1]
+
+query.update(92106429, *updated_columns)
+
 
 for _ in range(10):
     for key in keys:
@@ -53,11 +63,13 @@ for _ in range(10):
                 if column != records[key][j]:
                     error = True
             if error:
-                print('update error on', original, 'and', updated_columns, ':', record, ', correct:', records[key])
-            # else:
-            #     print('update on', original, 'and', updated_columns, ':', record)
+                print('update error on', original, 'and', updated_columns, ':', record.columns, ', correct:', records[key])
+            else:
+                print('update on', original, 'and', updated_columns, ':', record)
             updated_columns[i] = None
 print("Update finished")
+
+"""
 
 for i in range(0, 100):
     r = sorted(sample(range(0, len(keys)), 2))

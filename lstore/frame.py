@@ -15,6 +15,7 @@ class Frame:
         self.outstanding_transactions = 0
         self.num_columns = num_col
         self.is_dirty = False
+        self.is_tail = False
 
 
     def pin_page(self):
@@ -68,6 +69,7 @@ class Frame:
         file_num = page_num % num_col
         page  = self.page
         file_name = path + "/" + self.table_name + "_" + str(file_num) + ".bin"
+        print("File num:",file_num)
 
         mode = "w+b"
         if os.path.exists(file_name):
@@ -82,6 +84,30 @@ class Frame:
 
         print(page_num, file_num)
 
+
+    def write_frame_tail(self, path):
+
+        page_num = self.key
+        num_col = self.num_columns
+        seek_offset = int(page_num/num_col)
+        seek_mult = PAGE_CAPACITY_IN_BYTES
+        file_num = page_num % num_col
+        page  = self.page
+        file_name = path + "/" + self.table_name + "_tail_" + str(file_num) + ".bin"
+        print("File num:",file_num)
+
+        mode = "w+b"
+        if os.path.exists(file_name):
+            mode = "r+b"
+
+        file= open(file_name, mode) #binary
+        file.seek(seek_offset * seek_mult)
+        file.write(page.data)
+        file.close()
+        
+        self.is_dirty = False
+
+        print(page_num, file_num)
 
     def print_page(self):
         print(f"Page Identity: {self.key, self.page, self.table_name}")
