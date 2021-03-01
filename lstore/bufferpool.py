@@ -122,8 +122,8 @@ class BufferPool:
         is_dirty = lru_frame.is_dirty
 
         if (is_dirty):
-            # if lru_frame.is_tail == True:
-            if lru_frame.page.page_num < 0:
+            if lru_frame.is_tail == True:
+            # if lru_frame.page.page_num < 0:
                 print("Persisting tail LRU Frame ", key)
                 lru_frame.write_frame_tail(self.path)
                 lru_frame.is_tail = False

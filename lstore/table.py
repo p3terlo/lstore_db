@@ -84,8 +84,8 @@ class Table:
         the num_columns given.
         '''
         """        
-        999-999 =  0-1 = -1
-        998-999 = -1-1 = -2
+        999-999 =  0-1 = -1 * -1 = 1
+        998-999 = -1-1 = -2 * -1 = 2
         """
         print("calculate rid",rid)
         rid = (rid - MAX_INT) -  1
@@ -179,9 +179,7 @@ class Table:
             frame.pin_page()
             print("Retrieved Frame!")
             frame.page.display_internal_memory()
-
             frame.page.write_slot(rid, record_col[i])
-
             print("writing", record_col[i])
             frame.make_dirty()
             frame.page.display_internal_memory()
@@ -212,11 +210,11 @@ class Table:
         base_indirection_frame = self.bufferpool.get_frame_from_pool(self.name, total_columns, indirection_page_num)
 
         for i in range(NUM_DEFAULT_COLUMNS, NUM_DEFAULT_COLUMNS + self.num_columns):
-            if query_columns[i - NUM_DEFAULT_COLUMNS] == 1:
-                frame = self.bufferpool.get_frame_from_pool(self.name, 9, starting_page_num+i)
-                value = frame.page.grab_slot(slot_num)
-                print(value)
-                record_col.append(value)
+            # if query_columns[i - NUM_DEFAULT_COLUMNS] == 1:
+            frame = self.bufferpool.get_frame_from_pool(self.name, 9, starting_page_num+i)
+            value = frame.page.grab_slot(slot_num)
+            # print(value)
+            record_col.append(value)
 
         indirection_value = base_indirection_frame.page.grab_slot(slot_num)
 
@@ -239,8 +237,11 @@ class Table:
                 if schema_string[i] == "1": 
                     print("FOUND A CHANGE") 
                     tail_page_to_add_frame = self.bufferpool.get_frame_from_pool_tail(self.name, total_columns, tail_page_num + NUM_DEFAULT_COLUMNS+i)
+                    tail_page_to_add_frame.pin_page()
                     print("defaults + i", NUM_DEFAULT_COLUMNS + i, "slot:", tail_slot_num)
                     record_col[NUM_DEFAULT_COLUMNS + i] = tail_page_to_add_frame.page.grab_slot(tail_slot_num)
+                    tail_page_to_add_frame.unpin_page()
+
 
 
         print(record_col)
@@ -298,11 +299,12 @@ class Table:
         indirection_value = base_indirection_frame.page.grab_slot(slot_num)
 
         if indirection_value != 0:
-            print("went in if")
+            print("Previously updated")
             #Set old update as indirection for new update
             record_col[INDIRECTION_COLUMN] = indirection_value
 
             #Grab locations of old update
+            print("indirection:", indirection_value)
             old_update_page_dict = self.calculate_tail_page_numbers(total_columns, indirection_value)
 
             #Grab Schema of old update
@@ -311,11 +313,12 @@ class Table:
 
             print("old_update_starting_page", old_update_starting_page)
 
-            old_schema_frame = self.bufferpool.get_frame_from_pool_tail(self.name, total_columns, indirection_value)
+            old_schema_frame = self.bufferpool.get_frame_from_pool_tail(self.name, total_columns, old_update_schema_page)
             old_schema_int = old_schema_frame.page.grab_slot(old_update_page_dict[SLOT_NUM_COL])
             
             #grab current schema
-            current_schema_int = record_col[SCHEMA_ENCODING_COLUMN]
+            # current_schema_int = record_col[SCHEMA_ENCODING_COLUMN]
+            current_schema_int = schema
 
             # Convert from int to useable string format EX: 10 -> "00010"
             leadingZeros = "0" * self.num_columns
@@ -364,6 +367,8 @@ class Table:
 
         #Write new tail record to base indirection
         print("replacing indirection")
+        base_indirection_frame = self.bufferpool.get_frame_from_pool(self.name, total_columns, base_page_indirection_num)
+
         base_indirection_frame.pin_page()
         # base_indirection_frame.page.display_internal_memory()
         base_indirection_frame.page.update_slot(base_rid, tail_record_rid)
