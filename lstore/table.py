@@ -104,35 +104,6 @@ class Table:
         output[PAGE_RANGE_COL] = page_range_num
 
         return output
-
-
-    @staticmethod
-    def calculate_actual_tail_page_numbers(num_columns, rid):
-        '''
-        Maps a given RID -> corresponding slot_id within a page according to the 
-        PAGE_CAPACITY_IN_BYTES and INTEGER_CAPACITY_IN_BYTES constraints.
-
-        Additionally gives the beginning page_id which a record belongs to depending on
-        the num_columns given.
-        '''
-        """        
-        999-999 =  0-1 = -1
-        998-999 = -1-1 = -2
-        """
-
-        # We subtract 1 from RID because first RID starts at 1
-        output = {}
-
-        slots_per_page = int(PAGE_CAPACITY_IN_BYTES / INTEGER_CAPACITY_IN_BYTES)
-        output[SLOT_NUM_COL] = (rid - 1) % slots_per_page
-
-        page_offset = int((rid - 1) / slots_per_page) 
-        output[PAGE_NUM_COL] = (num_columns) * page_offset
-
-        page_range_num = int((rid - 1) / PAGE_RANGE)
-        output[PAGE_RANGE_COL] = page_range_num
-
-        return output
     
 
 
