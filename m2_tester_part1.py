@@ -22,15 +22,10 @@ for i in range(0, 24):
 
 keys = sorted(list(records.keys()))
 print("Insert finished")
-grades_table.bufferpool.print_pool()
-# grades_table.sample_read()
 
-
-print("----------------------------------------------------------")
 
 for key in keys:
     record = query.select(key, 0, [1, 1, 1, 1, 1])[0]
-
     error = False
     for i, column in enumerate(record.columns):
         if column != records[key][i]:
@@ -41,33 +36,45 @@ for key in keys:
         print('select on', key, ':', record)
 print("Select finished")
 
-print("----------------------------------------------------------")
 
-# updated_columns = [None, None, None, None, 1]
+for _ in range(10):
+    for key in keys:
+        updated_columns = [None, None, None, None, None]
+        for i in range(1, grades_table.num_columns):
+            value = randint(0, 20)
+            updated_columns[i] = value
+            original = records[key].copy()
+            records[key][i] = value
+            query.update(key, *updated_columns)
+            record = query.select(key, 0, [1, 1, 1, 1, 1])[0]
+            error = False
+            for j, column in enumerate(record.columns):
+                if column != records[key][j]:
+                    error = True
+            if error:
+                print('update error on', original, 'and', updated_columns, ':', record.columns, ', correct:', records[key])
+            else:
+                print('update on', original, 'and', updated_columns, ':', record)
+            updated_columns[i] = None
+print("Update finished")
 
-# query.update(92106429, *updated_columns)
 
-
-# for _ in range(10):
 for key in keys:
-    updated_columns = [None, None, None, None, None]
-    for i in range(1, grades_table.num_columns):
-        value = randint(0, 20)
-        updated_columns[i] = value
-        original = records[key].copy()
-        records[key][i] = value
-        query.update(key, *updated_columns)
-        record = query.select(key, 0, [1, 1, 1, 1, 1])[0]
-        error = False
-        for j, column in enumerate(record.columns):
-            if column != records[key][j]:
-                error = True
-        if error:
-            print('update error on', original, 'and', updated_columns, ':', record.columns, ', correct:', records[key])
-        else:
-            print('update on', original, 'and', updated_columns, ':', record)
-        updated_columns[i] = None
-# print("Update finished")
+    # grades_table.merge(key)
+    query.merge(key)
+
+
+for key in keys:
+    record = query.select(key, 0, [1, 1, 1, 1, 1])[0]
+    error = False
+    for i, column in enumerate(record.columns):
+        if column != records[key][i]:
+            error = True
+    if error:
+        print('select error on', key, ':', record.columns, ', correct:', records[key])
+    else:
+        print('select on', key, ':', record)
+print("Select finished 2")
 
 """
 

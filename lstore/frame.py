@@ -35,6 +35,13 @@ class Frame:
         self.is_dirty = False
 
 
+    def write_slot(self, rid, data):#Alvin
+        self.pin_page()
+        self.page.write_slot(rid, data)
+        self.make_dirty()
+        self.unpin_page()
+
+
     def write_value(self, val):
         self.page.write(val)
         self.is_dirty = True
@@ -69,7 +76,7 @@ class Frame:
         file_num = page_num % num_col
         page  = self.page
         file_name = path + "/" + self.table_name + "_" + str(file_num) + ".bin"
-        print("File num:",file_num)
+        # print("File num:",file_num)
 
         mode = "w+b"
         if os.path.exists(file_name):
@@ -81,8 +88,6 @@ class Frame:
         file.close()
         
         self.is_dirty = False
-
-        print(page_num, file_num)
 
 
     def write_frame_tail(self, path):
@@ -94,7 +99,7 @@ class Frame:
         file_num = page_num % num_col
         page  = self.page
         file_name = path + "/" + self.table_name + "_tail_" + str(file_num) + ".bin"
-        print("File num:",file_num)
+        # print("File num:",file_num)
 
         mode = "w+b"
         if os.path.exists(file_name):
@@ -106,8 +111,6 @@ class Frame:
         file.close()
         
         self.is_dirty = False
-
-        print(page_num, file_num)
 
     def print_page(self):
         print(f"Page Identity: {self.key, self.page, self.table_name}")

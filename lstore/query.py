@@ -31,7 +31,7 @@ class Query:
     def insert(self, *columns):
         try:
             schema_encoding = '0' * self.table.num_columns
-            self.table.add(*columns)
+            self.table.add2(*columns)
             return True  
         except:
             return False
@@ -87,3 +87,6 @@ class Query:
             u = self.update(key, *updated_columns)
             return u
         return False
+
+    def merge(self, key):
+        self.table.merge(key)
