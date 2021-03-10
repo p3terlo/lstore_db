@@ -7,6 +7,9 @@ import sys
 SUCCESS = True
 FAIL = False
 
+NUM_QUEUES = 4
+NUM_THREADS = 2
+
 BUFF_POOL_SIZE = 10
 
 PAGE_RANGE = 2000
