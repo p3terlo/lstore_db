@@ -2,11 +2,10 @@ from lstore.db import Database
 from lstore.query import Query
 from lstore.transaction import Transaction
 from lstore.transaction_worker import TransactionWorker
-# from lstore.config import *
+from lstore.config import *
 
+import sys
 from random import choice, randint, sample, seed
-
-transaction_queue = []
 
 # init()
 db = Database()
@@ -40,6 +39,8 @@ for i in range(num_threads):
     transaction_workers[i].add_transaction(update_transactions[i])
 worker_keys = [ {} for t in transaction_workers ]
 
+
+
 # for i in range(0, 1000):
 for i in range(0, 24):
     key = 92106429 + i
@@ -55,6 +56,7 @@ t = 0
 _records = [records[key] for key in keys]
 # for c in range(grades_table.num_columns):
 for c in range(1):
+
     _keys = sorted(list(set([record[c] for record in _records])))
     index = {v: [record for record in _records if record[c] == v] for v in _keys}
     for key in _keys:
@@ -83,25 +85,29 @@ count = 0
 print(len(transaction_workers))
 for i in range(len(transaction_workers)):
     print("Transaction Worker:", count)
-    print(transaction_workers[i].display_worker())
+    #print(transaction_workers[i].display_worker())
+    transaction_workers[i].display_worker()
     count += 1
-
-
-for transaction_worker in transaction_workers:
-    transaction_worker.run(transaction_queue)
-
-print(transaction_queue)
-print(len(transaction_queue))
-
-# score = len(keys)
-# for key in keys:
-#     correct = records[key]
-#     query = Query(grades_table)
     
-#     result = query.select(key, 0, [1, 1, 1, 1, 1])[0].columns
-#     if correct != result:
-#         print('select error on primary key', key, ':', result, ', correct:', correct)
-#         score -= 1
-# print('Score', score, '/', len(keys))
+print("LIST")
+for item in THREAD_MASTER:
+    item.print_queries()
+    
+"""
+print("running")
+for transaction_worker in transaction_workers:
+     transaction_worker.run()
 
-# db.close()
+score = len(keys)
+for key in keys:
+     correct = records[key]
+     query = Query(grades_table)
+    
+     result = query.select(key, 0, [1, 1, 1, 1, 1])[0].columns
+     if correct != result:
+         print('select error on primary key', key, ':', result, ', correct:', correct)
+         score -= 1
+print('Score', score, '/', len(keys))
+
+db.close()
+"""
