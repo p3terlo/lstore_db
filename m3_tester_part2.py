@@ -6,6 +6,8 @@ from lstore.transaction_worker import TransactionWorker
 
 from random import choice, randint, sample, seed
 
+transaction_queue = []
+
 # init()
 db = Database()
 db.open('./ECS165')
@@ -53,7 +55,6 @@ t = 0
 _records = [records[key] for key in keys]
 # for c in range(grades_table.num_columns):
 for c in range(1):
-
     _keys = sorted(list(set([record[c] for record in _records])))
     index = {v: [record for record in _records if record[c] == v] for v in _keys}
     for key in _keys:
@@ -86,8 +87,11 @@ for i in range(len(transaction_workers)):
     count += 1
 
 
-# for transaction_worker in transaction_workers:
-#     transaction_worker.run()
+for transaction_worker in transaction_workers:
+    transaction_worker.run(transaction_queue)
+
+print(transaction_queue)
+print(len(transaction_queue))
 
 # score = len(keys)
 # for key in keys:

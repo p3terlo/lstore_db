@@ -282,6 +282,7 @@ class Table:
         #Get base record indirection page
         base_indirection_frame = self.get_frame(base_page_indirection_num)
         indirection_value = base_indirection_frame.page.grab_slot(slot_num)
+        print("Grabbing indirection:", indirection_value, "from page:", base_page_indirection_num)
 
         if indirection_value != NULL_PTR:
             print("Previously updated")
@@ -331,6 +332,7 @@ class Table:
         base_indirection_frame = self.get_frame(base_page_indirection_num)
         base_indirection_frame.pin_page()
         # base_indirection_frame.page.display_internal_memory()
+        print("updating indirection w/",tail_record_rid, "which is on page:", base_page_indirection_num)
         base_indirection_frame.page.update_slot(base_rid, tail_record_rid)
         base_indirection_frame.make_dirty()
         # base_indirection_frame.page.display_internal_memory()

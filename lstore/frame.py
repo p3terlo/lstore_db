@@ -114,4 +114,7 @@ class Frame:
 
     def print_page(self):
         print(f"Page Identity: {self.key, self.page, self.table_name}")
-        self.page.display_internal_memory()
+        # self.page.display_internal_memory()
+
+
+    

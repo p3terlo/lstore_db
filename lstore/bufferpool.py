@@ -85,8 +85,12 @@ class BufferPool:
                 page.data = bytearray(PAGE_CAPACITY_IN_BYTES)
 
         frame = Frame(page_num, page, table_name, num_columns)
-        self.frame_cache[page_num] = frame
-        self.frame_cache.move_to_end(page_num)
+
+        page_to_put_in_pool = (page_num * -1) - num_columns
+        # page_to_put_in_pool = page_num
+
+        self.frame_cache[page_to_put_in_pool] = frame
+        self.frame_cache.move_to_end(page_to_put_in_pool)
         self.number_current_pages += 1
         return frame
 
@@ -107,6 +111,8 @@ class BufferPool:
                 lru_frame.write_frame(self.path)
 
     def fetch_frame(self, table_name, number_columns, page_num): #Alvin
+        # self.print_pool()
+
         if page_num not in self.frame_cache:
             if (self.number_current_pages >= self.capacity): #eviction
                 self.evict()

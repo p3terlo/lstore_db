@@ -40,3 +40,7 @@ class Transaction:
     def commit(self):
         # TODO: commit to database
         return True
+
+    def display_transaction(self):
+        for i in range(len(self.queries)):
+            print(self.queries[i])            
