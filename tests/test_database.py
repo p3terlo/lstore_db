@@ -18,5 +18,5 @@ class TestDatabase(unittest.TestCase):
 
     def test_get_table(self):
         table = self.database.get_table("Grades")
-        print(table.index.indices)
+        print(table.index)
         

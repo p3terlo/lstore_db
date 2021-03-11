@@ -210,14 +210,14 @@ class BufferPool:
         """
         This method is used in the scanning of persisted records only.
         """
+        diagnostic_messages = True
+
         file_num = page_num % num_columns
         file_name = self.path + "/" + table_name + "_" + str(file_num) + ".bin"
-        # print("making new page/frame")
 
         if not os.path.exists(file_name): 
-            return self.make_new_frame(table_name,num_columns,page_num)
+            return self.make_new_frame(table_name, num_columns, page_num)
 
-        #reading from FILE
         seek_offset = int(page_num/num_columns)
         seek_mult = PAGE_CAPACITY_IN_BYTES
 
@@ -228,11 +228,14 @@ class BufferPool:
             data = f.read(seek_mult)
             page.data = bytearray(data)
             data_has_no_contents = sys.getsizeof(data) < 80
+
             if data_has_no_contents:
-                print("Reached Last Record.")
+                if diagnostic_messages:
+                    print("Reached Last Record.")
                 page.data = None
             else:
-                print("Inserting page...")
+                if diagnostic_messages:
+                    print(f"Page {page.page_num}: in Bufferpool for Scan...")
 
         frame = Frame(page_num, page, table_name, num_columns)
         self.frame_cache[page_num] = frame

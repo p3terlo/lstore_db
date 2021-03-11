@@ -105,7 +105,7 @@ class TestBufferPool(unittest.TestCase):
 
  
     def test_scan_column_pages(self):
-        column_id = 4
+        column_id = 6
 
         for page in self.database.bufferpool.scan_column_pages(column_id=column_id, table_name="Grades"):
             page.display_internal_memory()
