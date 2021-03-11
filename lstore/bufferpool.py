@@ -184,8 +184,62 @@ class BufferPool:
         return page_id in self.frame_cache
 
 
+    def scan_column_pages(self, column_id = 0, table_name = "Grades"):
+        """
+        Given a column, we scan the whole data base 
+        to return a list of pages containing list of pages.
+        """
+
+        need_to_get_more_records = True
+        page_num_index = 0
+        number_columns = 8
+
+        while need_to_get_more_records:
+            page_number = column_id + number_columns * page_num_index
+            frame = self.read_page_from_disk(table_name, number_columns, page_number)            
+            if frame.page.data is not None:
+                yield frame.page
+            else:
+                need_to_get_more_records = False
+            page_num_index += 1
+            
 
 
+    def read_page_from_disk(self, table_name, num_columns, page_num):
+        """
+        This method is used in the scanning of persisted records only.
+        """
+        
+        file_num = page_num % num_columns
+        file_name = self.path + "/" + table_name + "_" + str(file_num) + ".bin"
+        # print("making new page/frame")
+
+        if not os.path.exists(file_name): 
+            return self.make_new_frame(table_name,num_columns,page_num)
+
+        #reading from FILE
+        seek_offset = int(page_num/num_columns)
+        seek_mult = PAGE_CAPACITY_IN_BYTES
+
+        page = Page(page_num)
+        
+        with open(file_name, "rb") as f:
+            f.seek(seek_offset * seek_mult)
+            data = f.read(seek_mult)
+            page.data = bytearray(data)
+            data_has_no_contents = sys.getsizeof(data) < 80
+            if data_has_no_contents:
+                print("Reached Last Record.")
+                page.data = None
+            else:
+                print("Inserting page...")
+
+        frame = Frame(page_num, page, table_name, num_columns)
+        self.frame_cache[page_num] = frame
+        self.frame_cache.move_to_end(page_num)
+        self.number_current_pages += 1
+        return frame
+        
 
 
 
