@@ -45,6 +45,41 @@ class PlanningThread(Thread):
             i += 1
 
 
+class PlanningThreadManager():
+
+    def __init__(self, transactions):
+        self.transactions = transactions
+        self.num_threads = NUM_THREADS
+        self.threads = {}
+
+
+    # Start up threads and passes subset of transactions into respective thread
+    def init_threads(self):
+        group = len(self.transactions) // self.num_threads
+
+        for i in range(self.num_threads):
+            start = group * i
+            end = group * (i + 1)
+
+            # In case of leftover transaction
+            if (i == self.num_threads - 1 and end != len(self.transactions)):
+                end = len(self.transactions)
+
+            thread = PlanningThread(i, self.transactions[start:end])
+            thread.start()
+            self.threads[i] = thread
+
+        for thread in self.threads.values():
+            thread.join()
+
+
+    def print_threads(self):
+        for priority, thread in self.threads.items():
+            print(f"Thread #{priority}")
+            thread.print_queue()
+            print("\n")
+
+
 class ExecutionThread(Thread):
 
     def __init__(self, queue):
@@ -97,38 +132,3 @@ class ExecutionThreadManager():
             for thread in self.threads:
                 thread.join()
                 self.threads.remove(thread)
-
-
-class PlanningThreadManager():
-
-    def __init__(self, transactions):
-        self.transactions = transactions
-        self.num_threads = NUM_THREADS
-        self.threads = {}
-
-
-    # Start up threads and passes subset of transactions into respective thread
-    def init_threads(self):
-        group = len(self.transactions) // self.num_threads
-
-        for i in range(self.num_threads):
-            start = group * i
-            end = group * (i + 1)
-
-            # In case of leftover transaction
-            if (i == self.num_threads - 1 and end != len(self.transactions)):
-                end = len(self.transactions)
-
-            thread = PlanningThread(i, self.transactions[start:end])
-            thread.start()
-            self.threads[i] = thread
-
-        for thread in self.threads.values():
-            thread.join()
-
-
-    def print_threads(self):
-        for priority, thread in self.threads.items():
-            print(f"Thread #{priority}")
-            thread.print_queue()
-            print("\n")
