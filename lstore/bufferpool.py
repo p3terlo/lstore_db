@@ -66,6 +66,7 @@ class BufferPool:
 
     
     def read_frame_tail(self, table_name, num_columns, page_num): #Alvin
+
         file_num = page_num % num_columns
         file_name = self.path + "/" + table_name + "_tail_" + str(file_num) + ".bin"
        # print("making new page/frame")
@@ -94,10 +95,20 @@ class BufferPool:
 
         self.frame_cache[page_to_put_in_pool] = frame
         self.frame_cache.move_to_end(page_to_put_in_pool)
+        print("DID THIS WORK")
+
+        test = self.frame_cache[page_to_put_in_pool]
+        test.print_page()
+
         self.number_current_pages += 1
+
         return frame
 
     def evict(self): #Alvin
+        print("Cache Length:", len(self.frame_cache))
+
+
+
         lru_frame = self.frame_cache.popitem(last = False)[-1]
         self.number_current_pages -= 1
         
@@ -117,7 +128,8 @@ class BufferPool:
         # self.print_pool()
 
         if page_num not in self.frame_cache:
-            if (self.number_current_pages >= self.capacity): #eviction
+            if (self.number_current_pages >= self.capacity) and len(self.frame_cache) != 0: #eviction
+                print("BASE_NUM_CUR_PAGE:",self.number_current_pages, "CAP:",self.capacity)
                 self.evict()
             return self.read_frame(table_name, number_columns, page_num)
         else:
@@ -127,10 +139,12 @@ class BufferPool:
 
     def fetch_frame_tail(self, table_name, number_columns, page_num): #Alvin
         page_num = (page_num*-1) - number_columns #0->-9, 1->-10
-       # print(table_name, number_columns, page_num)
+
         if page_num not in self.frame_cache:
-            if (self.number_current_pages >= self.capacity): #eviction
+            if (self.number_current_pages >= self.capacity) and len(self.frame_cache) != 0: #eviction
+                print("TAIL_NUM_CUR_PAGE:",self.number_current_pages, "CAP:",self.capacity)
                 self.evict()
+
             page_num_to_read = (page_num + number_columns) * -1
             return self.read_frame_tail(table_name, number_columns, page_num_to_read)
         else:

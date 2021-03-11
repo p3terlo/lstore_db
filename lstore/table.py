@@ -167,6 +167,7 @@ class Table:
 
 
     def get_frame_tail(self, page_num):#Alvin
+        print("get_frame called", page_num)
         return self.bufferpool.fetch_frame_tail(self.name, self.num_columns + NUM_DEFAULT_COLUMNS, page_num)
 
 
@@ -299,6 +300,7 @@ class Table:
         # print("Tail_page_num",tail_page_num, "Tail_slot_num",tail_slot_num)
 
         #Get base record indirection page
+        print("get_frame_indirection", key)
         base_indirection_frame = self.get_frame(base_page_indirection_num)
         indirection_value = base_indirection_frame.page.grab_slot(slot_num)
         print("Grabbing indirection:", indirection_value, "from page:", base_page_indirection_num)
@@ -312,6 +314,7 @@ class Table:
             old_update_starting_page = old_update_page_dict[PAGE_NUM_COL]
             old_update_schema_page = old_update_starting_page + SCHEMA_ENCODING_COLUMN
             # print("old_update_starting_page", old_update_starting_page)
+            print("get_frame_old_schema" ,key)
             old_schema_frame = self.get_frame_tail(old_update_schema_page)
             old_schema_int = old_schema_frame.page.grab_slot(old_update_page_dict[SLOT_NUM_COL])
 
@@ -323,6 +326,7 @@ class Table:
             # Grab updates from previous updates, don't grab new updates or will overwrite them
             for i in range(len(old_schema_string)):
                 if old_schema_string[i] == "1" and current_schema_string[i] != "1":
+                    print("get_frame_old_tail" ,key)
                     old_tail_frame = self.get_frame_tail(old_update_starting_page + NUM_DEFAULT_COLUMNS + i)
                     record_col[NUM_DEFAULT_COLUMNS + i] = old_tail_frame.page.grab_slot(old_update_page_dict[SLOT_NUM_COL])
 
@@ -338,6 +342,7 @@ class Table:
             print(i)
             current_page = tail_page_num + i
             # print("Updating current_page:",current_page)
+            print("get_frame_tail_current",key)
             frame = self.get_frame_tail(current_page)
             frame.pin_page()
             # frame.page.display_internal_memory()
@@ -350,6 +355,7 @@ class Table:
             frame.unpin_page()
 
         #Write new tail record to base indirection
+        print("get_frame_indirection_frame", key)
         base_indirection_frame = self.get_frame(base_page_indirection_num)
         base_indirection_frame.pin_page()
         # base_indirection_frame.page.display_internal_memory()
