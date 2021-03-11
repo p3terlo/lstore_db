@@ -33,7 +33,7 @@ class TestTable(unittest.TestCase):
         print(output["starting_page_id"])
 
 
-    @unittest.SkipTest
+    # @unittest.SkipTest
     def test_select(self):
         self.table.add2(*[92106420, 5, 12, 2, 10])
         self.table.update(92106420, *[None, None, None, None, 20])

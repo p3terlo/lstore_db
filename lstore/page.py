@@ -1,4 +1,6 @@
 from lstore.config import *
+import sys
+
 
 class Page:
 
@@ -18,7 +20,7 @@ class Page:
     def update_slot(self, rid, value): 
         val_as_bytes = value.to_bytes(INTEGER_CAPACITY_IN_BYTES, 'big')
         slot_start = (rid-1) % int(PAGE_CAPACITY_IN_BYTES/INTEGER_CAPACITY_IN_BYTES) 
-        print("updating RID:", rid, "with page_num:", self.page_num, "and slot_start:", slot_start, "value:", value)
+        # print("updating RID:", rid, "with page_num:", self.page_num, "and slot_start:", slot_start, "value:", value)
         slot_num = slot_start * INTEGER_CAPACITY_IN_BYTES
 
         for byte_index in range(INTEGER_CAPACITY_IN_BYTES): 
@@ -31,10 +33,17 @@ class Page:
         slot_start = (rid-1) % int(PAGE_CAPACITY_IN_BYTES/INTEGER_CAPACITY_IN_BYTES) 
         print("RID:", rid, "page_num:", self.page_num, "slot_start:", slot_start)
         slot_num = slot_start * INTEGER_CAPACITY_IN_BYTES
+        allocated = 0
 
         if self.has_capacity():
             for byte_index in range(INTEGER_CAPACITY_IN_BYTES): 
-                self.data[slot_num + byte_index] = val_as_bytes[byte_index]
+                try:
+                    self.data[slot_num + byte_index] = val_as_bytes[byte_index]
+                except:
+                    if allocated == 0:
+                        self.data = bytearray(PAGE_CAPACITY_IN_BYTES)
+                    allocated = 1
+                    self.data[slot_num + byte_index] = val_as_bytes[byte_index]
             self.num_records += 1
         else:
             print("OUTOFRANGE base")
@@ -44,6 +53,8 @@ class Page:
     def write_slot_tail(self, rid, value): 
         rid = (rid - MAX_INT) - 1  #999 - 999 = 0 -1 = -1
         rid = rid * -1 # -1 * -1 = 1
+
+        allocated = 0
 
         if(value == None):
             value = 0
@@ -56,8 +67,16 @@ class Page:
 
         # if self.has_capacity():
         for byte_index in range(INTEGER_CAPACITY_IN_BYTES): 
-            self.data[slot_num + byte_index] = val_as_bytes[byte_index]
-        self.num_records += 1
+            # print("Page_num",self.page_num,"slot_num",slot_num,"byte_index", byte_index)
+            # print(self.data[slot_num + byte_index])
+            try:
+                self.data[slot_num + byte_index] = val_as_bytes[byte_index]
+            except:
+                if allocated == 0:
+                    self.data = bytearray(PAGE_CAPACITY_IN_BYTES)
+                allocated = 1
+                self.data[slot_num + byte_index] = val_as_bytes[byte_index]
+            self.num_records += 1
         # else:
         #     print("OUTOFRANGE tail")
         #     raise IndexError("Out of Range!")

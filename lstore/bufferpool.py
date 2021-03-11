@@ -51,7 +51,9 @@ class BufferPool:
             f.seek(seek_offset * seek_mult)
             data = f.read(seek_mult)
             page.data = bytearray(data)
+            # if sys.getsizeof(data) < 80:
             if sys.getsizeof(data) < 80:
+
                 print("Allocating space for empty page of size:",sys.getsizeof(data))
                 page.data = bytearray(PAGE_CAPACITY_IN_BYTES)
 
@@ -88,6 +90,7 @@ class BufferPool:
 
         page_to_put_in_pool = (page_num * -1) - num_columns
         # page_to_put_in_pool = page_num
+        print("Tail page being inserted into buffer:", page_to_put_in_pool)
 
         self.frame_cache[page_to_put_in_pool] = frame
         self.frame_cache.move_to_end(page_to_put_in_pool)

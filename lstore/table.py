@@ -208,11 +208,19 @@ class Table:
         total_columns = self.num_columns + NUM_DEFAULT_COLUMNS
         base_indirection_frame = self.get_frame(indirection_page_num)
 
+        #GETS ALL VALUES
         for i in range(NUM_DEFAULT_COLUMNS, NUM_DEFAULT_COLUMNS + self.num_columns):
-            if query_columns[i - NUM_DEFAULT_COLUMNS] == 1:
-                frame = self.get_frame(starting_page_num+i)
-                value = frame.page.grab_slot(slot_num)
-                record_col.append(value)
+            # if query_columns[i - NUM_DEFAULT_COLUMNS] == 1:
+            frame = self.get_frame(starting_page_num+i)
+            value = frame.page.grab_slot(slot_num)
+            record_col.append(value)
+
+
+        # for i in range(NUM_DEFAULT_COLUMNS, NUM_DEFAULT_COLUMNS + self.num_columns):
+        #     if query_columns[i - NUM_DEFAULT_COLUMNS] == 1:
+        #         frame = self.get_frame(starting_page_num+i)
+        #         value = frame.page.grab_slot(slot_num)
+        #         record_col.append(value)
 
         indirection_value = base_indirection_frame.page.grab_slot(slot_num)
 
@@ -235,10 +243,20 @@ class Table:
                 if schema_string[i] == "1": 
                     tail_page_to_add_frame = self.get_frame_tail(tail_page_num + NUM_DEFAULT_COLUMNS+i)
                     # tail_page_to_add_frame.pin_page()
+                    print("tail_page_num", tail_page_num, "tail_slot_num:", tail_slot_num, "i", i)
+                    print(record_col)
                     record_col[i] = tail_page_to_add_frame.page.grab_slot(tail_slot_num)
                     # tail_page_to_add_frame.unpin_page()
 
         print(record_col)
+        record_to_return = []
+
+        for i in range(len(record_col)):
+            if query_columns[i] == 1:
+                record_to_return.append(record_col[i])
+
+        record_col = record_to_return
+
         record_to_return = Record(rid,key,record_col)  
         record_array.append(record_to_return)
         print("End of select on key:", key, "\n")
@@ -247,6 +265,7 @@ class Table:
 
     def update(self, key, *columns):
         print("\nBeginning Update on key:", key)
+        print("will be applying:",columns)
         #Get base record and base rid
         base_rid = self.index.locate(column=0, value=key)[0]
 
@@ -316,12 +335,14 @@ class Table:
         print(record_col)
 
         for i in range(total_columns):
+            print(i)
             current_page = tail_page_num + i
             # print("Updating current_page:",current_page)
             frame = self.get_frame_tail(current_page)
             frame.pin_page()
             # frame.page.display_internal_memory()
             frame.is_tail = True
+            print("tail_record_rid", tail_record_rid, "record_col[i]", record_col[i])
             frame.page.write_slot_tail(tail_record_rid, record_col[i])
             # print("Writing", record_col[i])
             frame.make_dirty()
