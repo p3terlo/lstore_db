@@ -124,15 +124,17 @@ class TestIndex(unittest.TestCase):
 
         self.assertEqual(number_of_records_inserted, number_of_records_in_key_column_index)
 
+
     def test_locate(self):
         record_key = 92110441
         record_RID = [37]
         record_not_existing = 5045
 
         self.assertEqual(record_RID, self.index_for_table.locate(column=KEY_COLUMN, value=record_key))
-        self.assertEqual(None, self.index_for_table.locate(column=KEY_COLUMN, value=record_not_existing))
+        self.assertEqual([-1], self.index_for_table.locate(column=KEY_COLUMN, value=record_not_existing))
 
 
+    @unittest.skip("We are no longer sorting")
     def test_locate_range(self):
         min_key = 92113322
         max_key = 92115022
@@ -186,6 +188,7 @@ class TestIndex(unittest.TestCase):
         self.assertEqual(sorted_values, self.index_for_table.locate(column=0, value=1))
 
 
+    @unittest.skip("We are no longer sorting")
     def test_locate_range_multiple_values_for_single_key(self):
         key = 5
         value = 14
@@ -204,5 +207,7 @@ class TestIndex(unittest.TestCase):
         self.assertEqual(sorted_values, self.index_for_table.locate_range(begin=1, end=5, column=0))
 
 
-    
+    def test_str(self):
+        print(self.index_for_table)
+
     
