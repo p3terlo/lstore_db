@@ -20,6 +20,10 @@ class Record:
         print("Rid: %d with key %d" % (self.rid ,self.key))
 
 
+    def __str__(self):
+        return f"{self.columns}"
+
+
 class Table:
     """
     :param name: string         #Table name
