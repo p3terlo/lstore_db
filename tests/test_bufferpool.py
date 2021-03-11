@@ -43,7 +43,7 @@ class TestBufferPool(unittest.TestCase):
 
 
 
-    # @unittest.SkipTest
+    @unittest.SkipTest
     def test_read_frame(self):
         number_columns = 8
         page_number = 0 + number_columns * 8
@@ -104,5 +104,8 @@ class TestBufferPool(unittest.TestCase):
         self.assertIs(type(read_frame), Frame)
 
  
+    def test_scan_column_pages(self):
+        column_id = 4
 
- 
+        for page in self.database.bufferpool.scan_column_pages(column_id=column_id, table_name="Grades"):
+            page.display_internal_memory()

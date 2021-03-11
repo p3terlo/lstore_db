@@ -16,9 +16,6 @@ class TestTable(unittest.TestCase):
         self.table = self.database.create_table('Grades', 5, 0)
         self.table.pass_bufferpool(self.database.bufferpool)
     
-        print(f"Page Range: {PAGE_RANGE} Records")
-        print(f"Page Capacity: {PAGE_CAPACITY_IN_BYTES} Bytes")
-        print(f"Integer Capacity: {INTEGER_CAPACITY_IN_BYTES} Bytes")
 
 
     @unittest.SkipTest
