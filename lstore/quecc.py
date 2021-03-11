@@ -1,4 +1,3 @@
-import queue
 from threading import Thread
 from lstore.config import NUM_QUEUES, NUM_THREADS
 from lstore.transaction import Transaction
@@ -18,7 +17,7 @@ class PlanningThread(Thread):
 
     def init_queues(self):
         for _ in range(self.num_queues):
-            q = queue.Queue()
+            q = []
             self.queues.append(q)
             
 
@@ -27,7 +26,7 @@ class PlanningThread(Thread):
         for transaction in self.transactions:
             for query, args in transaction.queries:
                 key = args[0] % self.num_queues
-                self.queues[key].put((query,args))
+                self.queues[key].append((query,args))
 
 
     # Override the run() function of Thread class
@@ -36,18 +35,68 @@ class PlanningThread(Thread):
         self.add_transactions()
     
 
-    # Only for testing purposes
-    # Be careful because this pops off the queue, thus actually emptying the queue in the process
     def print_queue(self):
         i = 0
         for queue in self.queues:
             print(f"Queue #{i}")
-
-            while not queue.empty():
-                query = queue.get()
+            for query in queue:
                 print(query)
 
             i += 1
+
+
+class ExecutionThread(Thread):
+
+    def __init__(self, queue):
+        Thread.__init__(self)
+        self.queue = queue
+        self.stats = []
+
+
+    def execute_operations(self):
+        if self.queue:
+            for query, args in self.queue:
+                result = query(*args)
+                if result != False:
+                    result = True
+                self.stats.append(result)
+
+
+    def run(self):
+        self.execute_operations()
+
+
+class ExecutionThreadManager():
+
+    def __init__(self, planningThreadManager):
+        self.planningThreadManager = planningThreadManager
+        self.num_threads = NUM_THREADS if NUM_THREADS <= NUM_QUEUES else NUM_QUEUES # Ensures execution of higher priority queues before lower priority queues
+        self.ordered_queues = []
+        self.threads = []
+
+
+    def init_threads(self):
+        index = 0
+        num_planningThreads = self.planningThreadManager.num_threads
+
+        # Add queues in planning threads by priority to one list
+        for i in range(num_planningThreads):
+            planningThread = self.planningThreadManager.threads[i]
+            self.ordered_queues.extend(planningThread.queues)
+
+        # Assign a thread to each queue and upon completion, move on to next available queue
+        while index < len(self.ordered_queues):
+
+            for _ in range(self.num_threads):
+                thread = ExecutionThread(self.ordered_queues[index])
+                thread.start()
+                self.threads.append(thread)
+                index += 1
+
+            # Wait for a thread to finish before creating a new one and moving on to the next queue
+            for thread in self.threads:
+                thread.join()
+                self.threads.remove(thread)
 
 
 class PlanningThreadManager():
@@ -55,12 +104,11 @@ class PlanningThreadManager():
     def __init__(self, transactions):
         self.transactions = transactions
         self.num_threads = NUM_THREADS
-        self.threads = []
+        self.threads = {}
 
 
-    # Start up threads and group transactions into respective thread
+    # Start up threads and passes subset of transactions into respective thread
     def init_threads(self):
-
         group = len(self.transactions) // self.num_threads
 
         for i in range(self.num_threads):
@@ -73,14 +121,14 @@ class PlanningThreadManager():
 
             thread = PlanningThread(i, self.transactions[start:end])
             thread.start()
-            self.threads.append(thread)
+            self.threads[i] = thread
 
-        for thread in self.threads:
+        for thread in self.threads.values():
             thread.join()
 
 
     def print_threads(self):
-        for thread in self.threads:
-            print(f"Thread #{thread.priority}")
+        for priority, thread in self.threads.items():
+            print(f"Thread #{priority}")
             thread.print_queue()
-            print("\n") 
+            print("\n")
