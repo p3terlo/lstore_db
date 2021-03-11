@@ -184,7 +184,7 @@ class BufferPool:
         return page_id in self.frame_cache
 
 
-    def scan_column_pages(self, column_id = 0, table_name = "Grades"):
+    def scan_column_pages(self, column_id = 0, number_columns = 8, table_name = "Grades"):
         """
         Given a column, we scan the whole data base 
         to return a list of pages containing list of pages.
@@ -192,7 +192,6 @@ class BufferPool:
 
         need_to_get_more_records = True
         page_num_index = 0
-        number_columns = 8
 
         while need_to_get_more_records:
             page_number = column_id + number_columns * page_num_index
@@ -204,12 +203,10 @@ class BufferPool:
             page_num_index += 1
             
 
-
     def read_page_from_disk(self, table_name, num_columns, page_num):
         """
         This method is used in the scanning of persisted records only.
         """
-        
         file_num = page_num % num_columns
         file_name = self.path + "/" + table_name + "_" + str(file_num) + ".bin"
         # print("making new page/frame")
