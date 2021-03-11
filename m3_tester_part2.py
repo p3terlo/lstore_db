@@ -31,11 +31,11 @@ insert_transactions = []
 select_transactions = []
 update_transactions = []
 for i in range(num_threads):
-    insert_transactions.append(Transaction())
+    # insert_transactions.append(Transaction())
     select_transactions.append(Transaction())
     update_transactions.append(Transaction())
     transaction_workers.append(TransactionWorker())
-    transaction_workers[i].add_transaction(insert_transactions[i])
+    # transaction_workers[i].add_transaction(insert_transactions[i])
     transaction_workers[i].add_transaction(select_transactions[i])
     transaction_workers[i].add_transaction(update_transactions[i])
 worker_keys = [ {} for t in transaction_workers ]
@@ -43,14 +43,15 @@ worker_keys = [ {} for t in transaction_workers ]
 
 
 # for i in range(0, 1000):
-for i in range(0, 4):
+for i in range(0, 3):
     key = 92106429 + i
     keys.append(key)
-    i = i % num_threads
+    # i = i % num_threads
     records[key] = [key, randint(i * 20, (i + 1) * 20), randint(i * 20, (i + 1) * 20), randint(i * 20, (i + 1) * 20), randint(i * 20, (i + 1) * 20)]
     q = Query(grades_table)
     # print("adding to worker", i, *records[key])
-    insert_transactions[i].add_query(q.insert, *records[key])
+    # insert_transactions[i].add_query(q.insert, *records[key])
+    q.insert(*records[key])
     worker_keys[i][key] = True
 
 t = 0
@@ -106,16 +107,16 @@ execution_manager.init_threads()
 # for transaction_worker in transaction_workers:
 #      transaction_worker.run()
 
-# score = len(keys)
-# for key in keys:
-#      correct = records[key]
-#      query = Query(grades_table)
+score = len(keys)
+for key in keys:
+     correct = records[key]
+     query = Query(grades_table)
     
-#      result = query.select(key, 0, [1, 1, 1, 1, 1])[0].columns
-#      if correct != result:
-#          print('select error on primary key', key, ':', result, ', correct:', correct)
-#          score -= 1
-# print('Score', score, '/', len(keys))
+     result = query.select(key, 0, [1, 1, 1, 1, 1])[0].columns
+     if correct != result:
+         print('select error on primary key', key, ':', result, ', correct:', correct)
+         score -= 1
+print('Score', score, '/', len(keys))
 
-# db.close()
+db.close()
 
