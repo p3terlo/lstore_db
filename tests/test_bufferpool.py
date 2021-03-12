@@ -11,10 +11,6 @@ from lstore.bufferpool import Frame, BufferPool
 
 class TestBufferPool(unittest.TestCase):
 
-# create DB, create table
-# add 5 records or so
-
-    
 
     def setUp(self):
 
@@ -43,13 +39,13 @@ class TestBufferPool(unittest.TestCase):
 
 
 
-    @unittest.SkipTest
+    # @unittest.SkipTest
     def test_read_frame(self):
         number_columns = 8
-        page_number = 0 + number_columns * 8
+        page_number = 4 + number_columns * 0
         
         table_name = "Grades"
-        self.grades_table.bufferpool.assign_path("tests/files")
+        # self.grades_table.bufferpool.assign_path("tests/files")
         frame = self.grades_table.bufferpool.read_frame(table_name, number_columns, page_number)
         frame.page.display_internal_memory()
         self.assertIs(type(frame), Frame)
@@ -104,8 +100,10 @@ class TestBufferPool(unittest.TestCase):
         self.assertIs(type(read_frame), Frame)
 
  
+
+    @unittest.SkipTest
     def test_scan_column_pages(self):
-        column_id = 6
+        column_id = 4
 
         for page in self.database.bufferpool.scan_column_pages(column_id=column_id, table_name="Grades"):
             page.display_internal_memory()

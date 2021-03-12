@@ -51,12 +51,14 @@ class BufferPool:
             f.seek(seek_offset * seek_mult)
             data = f.read(seek_mult)
             page.data = bytearray(data)
-            # if sys.getsizeof(data) < 80:
+
             if sys.getsizeof(data) < 80:
 
                 print("Allocating space for empty page of size:",sys.getsizeof(data))
                 page.data = bytearray(PAGE_CAPACITY_IN_BYTES)
-
+            else:
+                print(f"Page {page.page_num}: in Bufferpool for Scan...")
+                
         frame = Frame(page_num, page, table_name, num_columns)
         self.frame_cache[page_num] = frame
         self.frame_cache.move_to_end(page_num)
@@ -214,19 +216,20 @@ class BufferPool:
 
         file_num = page_num % num_columns
         file_name = self.path + "/" + table_name + "_" + str(file_num) + ".bin"
-
+       
         if not os.path.exists(file_name): 
-            return self.make_new_frame(table_name, num_columns, page_num)
-
+            return self.make_new_frame(table_name,num_columns,page_num)
+        
         seek_offset = int(page_num/num_columns)
         seek_mult = PAGE_CAPACITY_IN_BYTES
-
+        
         page = Page(page_num)
         
         with open(file_name, "rb") as f:
             f.seek(seek_offset * seek_mult)
             data = f.read(seek_mult)
             page.data = bytearray(data)
+
             data_has_no_contents = sys.getsizeof(data) < 80
 
             if data_has_no_contents:
