@@ -184,6 +184,8 @@ class Table:
             current_page = starting_page_num + i
             frame = self.get_frame(current_page)
             frame.write_slot(self.base_rid, record_col[i])
+            frame.make_dirty()
+
 
         #index/page_directory
         self.index.insert(columns[self.key], self.base_rid)
@@ -216,6 +218,8 @@ class Table:
             value = frame.page.grab_slot(slot_num)
             record_col.append(value)
 
+        print("THE OGGGGGG", record_col)
+
 
         # for i in range(NUM_DEFAULT_COLUMNS, NUM_DEFAULT_COLUMNS + self.num_columns):
         #     if query_columns[i - NUM_DEFAULT_COLUMNS] == 1:
@@ -242,10 +246,11 @@ class Table:
             print("SCHEMA_STRING",schema_string)
             for i in range(len(schema_string)):
                 if schema_string[i] == "1": 
+                    print(i)
                     tail_page_to_add_frame = self.get_frame_tail(tail_page_num + NUM_DEFAULT_COLUMNS+i)
                     # tail_page_to_add_frame.pin_page()
                     print("tail_page_num", tail_page_num, "tail_slot_num:", tail_slot_num, "i", i)
-                    print(record_col)
+                    print("swag")
                     record_col[i] = tail_page_to_add_frame.page.grab_slot(tail_slot_num)
                     # tail_page_to_add_frame.unpin_page()
 
@@ -282,6 +287,16 @@ class Table:
         base_page_indirection_num = starting_page_num + INDIRECTION_COLUMN
         # print("starting page:", starting_page_num, "slot_num:", slot_num,"base_page_indirection_num:",base_page_indirection_num)
 
+        # the_og = []
+        # for i in range(NUM_DEFAULT_COLUMNS, NUM_DEFAULT_COLUMNS + self.num_columns):
+        #     # if query_columns[i - NUM_DEFAULT_COLUMNS] == 1:
+        #     frame = self.get_frame(starting_page_num+i)
+        #     value = frame.page.grab_slot(slot_num)
+        #     the_og.append(value)
+
+        # print("THE OGGGGGG before update----------------------------", the_og)
+
+
         #Handle schema: 00010 -> 10
         schema = self.schema_array_to_schema_int(*columns)
 
@@ -316,10 +331,12 @@ class Table:
             # print("old_update_starting_page", old_update_starting_page)
             print("get_frame_old_schema" ,key)
             old_schema_frame = self.get_frame_tail(old_update_schema_page)
+            old_schema_frame.is_tail = True
             old_schema_int = old_schema_frame.page.grab_slot(old_update_page_dict[SLOT_NUM_COL])
 
             #Grab current schema
             current_schema_string = self.schema_int_to_string(schema, self.num_columns)
+            print("current_schema_string", current_schema_string)
             old_schema_string = self.schema_int_to_string(old_schema_int, self.num_columns)
             new_schema_string = self.combine_schemas(current_schema_string, old_schema_string, self.num_columns)
 
@@ -328,6 +345,7 @@ class Table:
                 if old_schema_string[i] == "1" and current_schema_string[i] != "1":
                     print("get_frame_old_tail" ,key)
                     old_tail_frame = self.get_frame_tail(old_update_starting_page + NUM_DEFAULT_COLUMNS + i)
+                    old_tail_frame.is_tail = True
                     record_col[NUM_DEFAULT_COLUMNS + i] = old_tail_frame.page.grab_slot(old_update_page_dict[SLOT_NUM_COL])
 
             print("New schema string:", new_schema_string, "New schema int:",int(new_schema_string))
@@ -336,23 +354,44 @@ class Table:
             print("NO PREV UPDATING SCHEMA:", schema)
             record_col[SCHEMA_ENCODING_COLUMN] = schema
 
-        print(record_col)
+        print("RECORDTOTAIL",record_col)
+
+        # the_og = []
+        # for i in range(NUM_DEFAULT_COLUMNS, NUM_DEFAULT_COLUMNS + self.num_columns):
+        #     # if query_columns[i - NUM_DEFAULT_COLUMNS] == 1:
+        #     test_frame = self.get_frame(starting_page_num+i)
+        #     value = test_frame.page.grab_slot(slot_num)
+        #     the_og.append(value)
+
+        # print("THE OGGGGGG before update----------------------------", the_og)
+
 
         for i in range(total_columns):
-            print(i)
+            print("tail_page_num++++++", tail_page_num,"i", i)
+
             current_page = tail_page_num + i
             # print("Updating current_page:",current_page)
             print("get_frame_tail_current",key)
             frame = self.get_frame_tail(current_page)
+            frame.is_tail = True
             frame.pin_page()
             # frame.page.display_internal_memory()
-            frame.is_tail = True
             print("tail_record_rid", tail_record_rid, "record_col[i]", record_col[i])
             frame.page.write_slot_tail(tail_record_rid, record_col[i])
             # print("Writing", record_col[i])
             frame.make_dirty()
             # frame.page.display_internal_memory()
             frame.unpin_page()
+
+        # the_og = []
+        # for i in range(NUM_DEFAULT_COLUMNS, NUM_DEFAULT_COLUMNS + self.num_columns):
+        #     # if query_columns[i - NUM_DEFAULT_COLUMNS] == 1:
+        #     test_frame = self.get_frame(starting_page_num+i)
+        #     value = test_frame.page.grab_slot(slot_num)
+        #     the_og.append(value)
+
+        # print("THE OGGGGGG after update----------------------------", the_og)
+
 
         #Write new tail record to base indirection
         print("get_frame_indirection_frame", key)
@@ -371,6 +410,18 @@ class Table:
 
         self.tail_rid -= 1
         print("End of update on key:", key,"\n")
+
+
+
+        # the_og = []
+        # for i in range(NUM_DEFAULT_COLUMNS, NUM_DEFAULT_COLUMNS + self.num_columns):
+        #     # if query_columns[i - NUM_DEFAULT_COLUMNS] == 1:
+        #     test_frame = self.get_frame(starting_page_num+i)
+        #     value = test_frame.page.grab_slot(slot_num)
+        #     the_og.append(value)
+
+        # print("THE OGGGGGG before update----------------------------", the_og)
+
 
     
     def merge(self, key):
