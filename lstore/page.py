@@ -40,6 +40,7 @@ class Page:
                 try:
                     self.data[slot_num + byte_index] = val_as_bytes[byte_index]
                 except:
+                    print("REWRITINGGGGGGGGGG---------------------- page:", self.page_num)
                     if allocated == 0:
                         self.data = bytearray(PAGE_CAPACITY_IN_BYTES)
                     allocated = 1

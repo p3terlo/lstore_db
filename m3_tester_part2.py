@@ -43,16 +43,19 @@ worker_keys = [ {} for t in transaction_workers ]
 
 
 # for i in range(0, 1000):
-for i in range(0, 3):
+for i in range(0, 1000):
     key = 92106429 + i
     keys.append(key)
-    # i = i % num_threads
+    i = i % num_threads
     records[key] = [key, randint(i * 20, (i + 1) * 20), randint(i * 20, (i + 1) * 20), randint(i * 20, (i + 1) * 20), randint(i * 20, (i + 1) * 20)]
     q = Query(grades_table)
     # print("adding to worker", i, *records[key])
     # insert_transactions[i].add_query(q.insert, *records[key])
     q.insert(*records[key])
-    worker_keys[i][key] = True
+    # print("worker_keys:" worker_keys)
+    # worker_keys[i][key] = True
+    worker_keys[0][key] = True
+
 
 t = 0
 _records = [records[key] for key in keys]
@@ -106,6 +109,8 @@ execution_manager.init_threads()
 # print("running")
 # for transaction_worker in transaction_workers:
 #      transaction_worker.run()
+
+#Wait for all the threads
 
 score = len(keys)
 for key in keys:

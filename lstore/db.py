@@ -24,7 +24,9 @@ class Database():
 
 
     def close(self):
-        pass
+        self.bufferpool.evict_all()
+        self.bufferpool.print_pool()
+        # pass
 
 
     def create_table(self, name, num_columns, key):
