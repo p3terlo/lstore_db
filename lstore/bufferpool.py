@@ -135,9 +135,9 @@ class BufferPool:
         is_dirty = lru_frame.is_dirty
 
         if (is_dirty):
-            print("IS DIRTYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYy")
+            # print("IS DIRTYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYy")
             if lru_frame.is_tail == True:
-                print("WRITING FRAME TO TAILLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL ", key)
+                # print("WRITING FRAME TO TAILLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL ", key)
                 lru_frame.write_frame_tail(self.path)
                 lru_frame.is_tail = False
             else:
@@ -198,7 +198,7 @@ class BufferPool:
         if len(self.frame_cache) == 0:
             print("BufferPool is empty")
         else:
-            for frame in self.frame_cache.values():
+            for frame in self.frame_cache:#.values():
                 frame.print_page()
 
 
@@ -234,17 +234,9 @@ class BufferPool:
         # print(f"Checking if Page {page_id} exists inside the bufferpool: ", page_id in self.frame_cache)
         return page_id in self.frame_cache
 
-
-
-
-
-
-
-
-
-
-
-
+    def evict_all(self):
+        while len(self.frame_cache) != 0:
+            self.evict()
  
     # def read_page_from_disk(self, table_name: str, num_columns: int, page_num: int) -> Frame:
     #     """
