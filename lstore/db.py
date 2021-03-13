@@ -25,7 +25,7 @@ class Database():
 
     def close(self):
         self.bufferpool.evict_all()
-        self.bufferpool.print_pool()
+        # self.bufferpool.print_pool()
         # pass
 
 

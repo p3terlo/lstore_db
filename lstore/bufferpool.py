@@ -127,11 +127,11 @@ class BufferPool:
         return frame
 
     def evict(self): #Alvin
-        print("Cache Length:", len(self.frame_cache))
+        # print("Cache Length:", len(self.frame_cache))
 
         lru_frame = self.frame_cache.popitem(last = False)[-1]
         self.number_current_pages -= 1
-        print("evicting:", lru_frame.page.page_num)
+        # print("evicting:", lru_frame.page.page_num)
         
         key = lru_frame.key
         is_dirty = lru_frame.is_dirty
@@ -153,6 +153,7 @@ class BufferPool:
 
 
             if page_num not in self.frame_cache:
+
                 if (self.number_current_pages >= self.capacity) and len(self.frame_cache) != 0: #eviction
                     print("BASE_NUM_CUR_PAGE:",self.number_current_pages, "CAP:",self.capacity)
                     print("evicting base page---------------------")
@@ -166,6 +167,7 @@ class BufferPool:
 
     def fetch_frame_tail(self, table_name, number_columns, page_num): #Alvin
         with self._key_lock:
+            print(f"page_num {page_num}")
             page_num = (page_num*-1) - number_columns #0->-9, 1->-10
 
             print("TailNum to find in cache",page_num)
@@ -178,6 +180,8 @@ class BufferPool:
                     self.evict()
 
                 page_num_to_read = (page_num + number_columns) * -1
+
+                print(f"Reading tailpage: {page_num_to_read}")
                 return self.read_frame_tail(table_name, number_columns, page_num_to_read)
             else:
                 print("tailpage was in cache")
