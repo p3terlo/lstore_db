@@ -46,7 +46,7 @@ class Database():
             print("drop_table Error: No table exists with name %s" % (name))
 
 
-    def get_table(self, table_name):
+    def get_table(self, table_name: str):
         """
         Read persisted records to create a table. 
         Involves populating primary index as well as 
@@ -55,9 +55,10 @@ class Database():
         if table_name in self.tables:
             return self.tables[table_name]
         
-        num_hidden_columns = 4
-        rid_column_id = 0
-        number_columns = 0
+        num_hidden_columns = primary_key_column_id = 4
+
+        number_columns = rid_column_id = 0
+
         number_of_slots = int(PAGE_CAPACITY_IN_BYTES / INTEGER_CAPACITY_IN_BYTES)
         base_record_filenames = [file_name for file_name in os.listdir(self.path) if "tail" not in file_name]
 
@@ -70,8 +71,8 @@ class Database():
         bp = table.bufferpool
 
         for primary_key_page, rid_page in zip(
-            bp.scan_column_pages(column_id=4, table_name="Grades"),
-            bp.scan_column_pages(column_id=rid_column_id, table_name="Grades")):
+            bp.scan_column_pages(column_id=primary_key_column_id, number_columns=number_columns, table_name="Grades"),
+            bp.scan_column_pages(column_id=rid_column_id, number_columns=number_columns, table_name="Grades")):
             
             for slot_number in range(number_of_slots):
                 key = primary_key_page.grab_slot(slot_number)

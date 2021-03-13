@@ -241,7 +241,7 @@ class BufferPool:
         return page_id in self.frame_cache
 
 
-    def scan_column_pages(self, column_id = 0, number_columns = 8, table_name = "Grades"):
+    def scan_column_pages(self, column_id: int, number_columns: int, table_name: str):
         """
         Given a column, we scan the whole data base 
         to return a list of pages containing list of pages.
@@ -260,7 +260,7 @@ class BufferPool:
             page_num_index += 1
             
 
-    def read_page_from_disk(self, table_name, num_columns, page_num):
+    def read_page_from_disk(self, table_name: str, num_columns: int, page_num: int):
         """
         This method is used in the scanning of persisted records only.
         """
