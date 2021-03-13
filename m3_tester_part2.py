@@ -5,6 +5,8 @@ from lstore.transaction import Transaction
 from lstore.transaction_worker import TransactionWorker
 from lstore.config import *
 
+import time
+
 import sys
 from random import choice, randint, sample, seed
 
@@ -45,7 +47,8 @@ worker_keys = [ {} for t in transaction_workers ]
 
 
 
-for i in range(0, 1000):
+# for i in range(0, 1000):
+for i in range(0, 96):
     key = 92106429 + i
     keys.append(key)
     i = i % num_threads
@@ -78,15 +81,20 @@ for c in range(1):
         t += 1
 
 
+query = Query(grades_table)
+
+
 for j in range(0, num_threads):
     for key in worker_keys[j]:
         updated_columns = [None, None, None, None, None]
-        for i in range(1, grades_table.num_columns):
+        # for i in range(1, grades_table.num_columns):
+        for i in range(1, 2):
             value = randint(0, 20)
             updated_columns[i] = value
             records[key][i] = value
-            query = Query(grades_table)
+            # query = Query(grades_table)
             update_transactions[j].add_query(query.update, key, *updated_columns)
+            # query.update(key, *updated_columns)
             updated_columns = [None, None, None, None, None]
 
 
@@ -106,15 +114,17 @@ manager = PlanningThreadManager(THREAD_MASTER)
 manager.init_threads()
 manager.print_threads()
 
+
 execution_manager = ExecutionThreadManager(manager)
 execution_manager.init_threads()
-    
 
 # print("running")
 # for transaction_worker in transaction_workers:
 #      transaction_worker.run()
 
 #Wait for all the threads
+
+print("-------------------------------------------------")
 
 score = len(keys)
 for key in keys:

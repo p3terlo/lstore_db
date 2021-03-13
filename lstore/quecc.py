@@ -130,5 +130,8 @@ class ExecutionThreadManager():
 
             # Wait for a thread to finish before creating a new one and moving on to the next queue
             for thread in self.threads:
+                print("LERROYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY JENKINNNSSS")
                 thread.join()
                 self.threads.remove(thread)
+
+            print("adsgagadsgagadsgagadsgagadsgagadsgagadsgagadsgagadsgagadsgagadsgagadsgagadsgagadsgagadsgagadsgagadsgagadsgagadsgagadsgag")

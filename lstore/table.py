@@ -3,6 +3,9 @@ from .config import *
 from .index import Index
 from .page import *
 from .bufferpool import BufferPool
+import threading
+
+import sys
 
 import time
 
@@ -42,6 +45,8 @@ class Table:
 
         self.base_rid = 1
         self.tail_rid = MAX_INT
+        self._key_lock = threading.Lock()
+
 
     def pass_bufferpool(self, bufferpool):
         self.bufferpool = bufferpool
@@ -278,117 +283,122 @@ class Table:
         return record_array
 
     def update(self, key, *columns):
-        print("\nBeginning Update on key:", key)
-        print("will be applying:",columns)
-        #Get base record and base rid
-        base_rid = self.index.locate(column=0, value=key)[0]
+        with self._key_lock:
 
-        #RECORD NOT FOUND FIXME CHECK IF RECORD DELETED
-        if base_rid == -1:
-            return False
-        # base_rid = record.rid
+            print("\nBeginning Update on key:", key)
+            print("will be applying:",columns)
+            #Get base record and base rid
+            base_rid = self.index.locate(column=0, value=key)[0]
 
-        #Get page locations of base record
-        page_dict = self.page_directory[base_rid]
-        starting_page_num = page_dict[PAGE_NUM_COL]
-        slot_num = page_dict[SLOT_NUM_COL]
-        base_page_indirection_num = starting_page_num + INDIRECTION_COLUMN
-        # print("starting page:", starting_page_num, "slot_num:", slot_num,"base_page_indirection_num:",base_page_indirection_num)
+            #RECORD NOT FOUND FIXME CHECK IF RECORD DELETED
+            if base_rid == -1:
+                return False
+            # base_rid = record.rid
 
-        #Handle schema: 00010 -> 10
-        schema = self.schema_array_to_schema_int(*columns)
+            #Get page locations of base record
+            page_dict = self.page_directory[base_rid]
+            starting_page_num = page_dict[PAGE_NUM_COL]
+            slot_num = page_dict[SLOT_NUM_COL]
+            base_page_indirection_num = starting_page_num + INDIRECTION_COLUMN
+            # print("starting page:", starting_page_num, "slot_num:", slot_num,"base_page_indirection_num:",base_page_indirection_num)
 
-        #Create tail record and grab columns
-        tail_record_to_add = self.create_tail_record(*columns, previous_rid=base_rid, schema=schema)
-        tail_record_rid = tail_record_to_add.rid
-        record_col = tail_record_to_add.columns
-        total_columns = len(record_col)
-        # print("total_columns", total_columns,"record_col", record_col)
+            #Handle schema: 00010 -> 10
+            schema = self.schema_array_to_schema_int(*columns)
 
-        #Calculate tail page numbers
-        tail_page_dict = self.calculate_tail_page_numbers(total_columns, tail_record_rid)
-        tail_page_num = tail_page_dict[PAGE_NUM_COL]
-        tail_slot_num = tail_page_dict[SLOT_NUM_COL]
-        tail_page_range_num = tail_page_dict[PAGE_RANGE_COL]
-        # print("Tail_page_num",tail_page_num, "Tail_slot_num",tail_slot_num)
+            #Create tail record and grab columns
+            tail_record_to_add = self.create_tail_record(*columns, previous_rid=NULL_PTR, schema=schema)
+            tail_record_rid = tail_record_to_add.rid
+            record_col = tail_record_to_add.columns
+            total_columns = len(record_col)
+            # print("total_columns", total_columns,"record_col", record_col)
 
-        #Get base record indirection page
-        print("get_frame_indirection", key)
-        base_indirection_frame = self.get_frame(base_page_indirection_num)
-        indirection_value = base_indirection_frame.page.grab_slot(slot_num)
-        print("Grabbing indirection:", indirection_value, "from page:", base_page_indirection_num)
+            #Calculate tail page numbers
+            tail_page_dict = self.calculate_tail_page_numbers(total_columns, tail_record_rid)
+            tail_page_num = tail_page_dict[PAGE_NUM_COL]
+            tail_slot_num = tail_page_dict[SLOT_NUM_COL]
+            tail_page_range_num = tail_page_dict[PAGE_RANGE_COL]
+            # print("Tail_page_num",tail_page_num, "Tail_slot_num",tail_slot_num)
 
-        if indirection_value != NULL_PTR:
-            print("Previously updated")
-            #Grab Schema of old update
-            record_col[INDIRECTION_COLUMN] = indirection_value
-            print("indirection:", indirection_value)
-            old_update_page_dict = self.calculate_tail_page_numbers(total_columns, indirection_value)
-            old_update_starting_page = old_update_page_dict[PAGE_NUM_COL]
-            old_update_schema_page = old_update_starting_page + SCHEMA_ENCODING_COLUMN
-            # print("old_update_starting_page", old_update_starting_page)
-            print("get_frame_old_schema" ,key)
-            old_schema_frame = self.get_frame_tail(old_update_schema_page)
-            old_schema_frame.is_tail = True
-            old_schema_int = old_schema_frame.page.grab_slot(old_update_page_dict[SLOT_NUM_COL])
+            #Get base record indirection page
+            print("get_frame_indirection", key)
+            base_indirection_frame = self.get_frame(base_page_indirection_num)
+            indirection_value = base_indirection_frame.page.grab_slot(slot_num)
+            print("Grabbing indirection:", indirection_value, "from page:", base_page_indirection_num)
 
-            #Grab current schema
-            current_schema_string = self.schema_int_to_string(schema, self.num_columns)
-            print("current_schema_string", current_schema_string)
-            old_schema_string = self.schema_int_to_string(old_schema_int, self.num_columns)
-            new_schema_string = self.combine_schemas(current_schema_string, old_schema_string, self.num_columns)
+            if indirection_value != NULL_PTR:
+                print("Previously updated")
+                #Grab Schema of old update
+                record_col[INDIRECTION_COLUMN] = indirection_value
+                print("indirection:", indirection_value)
+                old_update_page_dict = self.calculate_tail_page_numbers(total_columns, indirection_value)
+                old_update_starting_page = old_update_page_dict[PAGE_NUM_COL]
+                old_update_schema_page = old_update_starting_page + SCHEMA_ENCODING_COLUMN
+                # print("old_update_starting_page", old_update_starting_page)
+                print("get_frame_old_schema" ,key)
+                old_schema_frame = self.get_frame_tail(old_update_schema_page)
+                old_schema_frame.is_tail = True
+                old_schema_int = old_schema_frame.page.grab_slot(old_update_page_dict[SLOT_NUM_COL])
 
-            # Grab updates from previous updates, don't grab new updates or will overwrite them
-            for i in range(len(old_schema_string)):
-                if old_schema_string[i] == "1" and current_schema_string[i] != "1":
-                    print("get_frame_old_tail" ,key)
-                    old_tail_frame = self.get_frame_tail(old_update_starting_page + NUM_DEFAULT_COLUMNS + i)
-                    old_tail_frame.is_tail = True
-                    record_col[NUM_DEFAULT_COLUMNS + i] = old_tail_frame.page.grab_slot(old_update_page_dict[SLOT_NUM_COL])
+                #Grab current schema
+                current_schema_string = self.schema_int_to_string(schema, self.num_columns)
+                print("current_schema_string", current_schema_string)
+                old_schema_string = self.schema_int_to_string(old_schema_int, self.num_columns)
+                new_schema_string = self.combine_schemas(current_schema_string, old_schema_string, self.num_columns)
 
-            print("New schema string:", new_schema_string, "New schema int:",int(new_schema_string))
-            record_col[SCHEMA_ENCODING_COLUMN] = int(new_schema_string)
-        else:
-            print("NO PREV UPDATING SCHEMA:", schema)
-            record_col[SCHEMA_ENCODING_COLUMN] = schema
+                # Grab updates from previous updates, don't grab new updates or will overwrite them
+                for i in range(len(old_schema_string)):
+                    if old_schema_string[i] == "1" and current_schema_string[i] != "1":
+                        print("get_frame_old_tail" ,key)
+                        old_tail_frame = self.get_frame_tail(old_update_starting_page + NUM_DEFAULT_COLUMNS + i)
+                        old_tail_frame.is_tail = True
+                        record_col[NUM_DEFAULT_COLUMNS + i] = old_tail_frame.page.grab_slot(old_update_page_dict[SLOT_NUM_COL])
 
-        print("RECORDTOTAIL",record_col)
+                print("New schema string:", new_schema_string, "New schema int:",int(new_schema_string))
+                record_col[SCHEMA_ENCODING_COLUMN] = int(new_schema_string)
+            else:
+                print("NO PREV UPDATING SCHEMA:", schema)
+                record_col[SCHEMA_ENCODING_COLUMN] = schema
 
-        for i in range(total_columns):
-            print("tail_page_num++++++", tail_page_num,"i", i)
+            print("RECORDTOTAIL",record_col)
 
-            current_page = tail_page_num + i
-            # print("Updating current_page:",current_page)
-            print("get_frame_tail_current",key)
-            frame = self.get_frame_tail(current_page)
-            frame.is_tail = True
-            frame.pin_page()
-            # frame.page.display_internal_memory()
-            print("tail_record_rid", tail_record_rid, "record_col[i]", record_col[i])
-            frame.page.write_slot_tail(tail_record_rid, record_col[i])
-            # print("Writing", record_col[i])
-            frame.make_dirty()
-            # frame.page.display_internal_memory()
-            frame.unpin_page()
+            for i in range(total_columns):
+                print("tail_page_num++++++", tail_page_num,"i", i)
+
+                current_page = tail_page_num + i
+                # print("Updating current_page:",current_page)
+                print("get_frame_tail_current",key)
+                frame = self.get_frame_tail(current_page)
+                frame.is_tail = True
+                frame.pin_page()
+                # frame.page.display_internal_memory()
+                print("tail_record_rid", tail_record_rid, "record_col[i]", record_col[i])
+                frame.page.write_slot_tail(tail_record_rid, record_col[i])
+                # print("Writing", record_col[i])
+                frame.make_dirty()
+                # frame.page.display_internal_memory()
+                frame.unpin_page()
 
 
-        #Write new tail record to base indirection
-        print("get_frame_indirection_frame", key)
-        base_indirection_frame = self.get_frame(base_page_indirection_num)
-        base_indirection_frame.pin_page()
-        # base_indirection_frame.page.display_internal_memory()
-        print("updating indirection w/",tail_record_rid, "which is on page:", base_page_indirection_num)
-        base_indirection_frame.page.update_slot(base_rid, tail_record_rid)
-        base_indirection_frame.make_dirty()
-        # base_indirection_frame.page.display_internal_memory()
-        base_indirection_frame.unpin_page()
+            #Write new tail record to base indirection
+            print("get_frame_indirection_frame", key)
+            base_indirection_frame = self.get_frame(base_page_indirection_num)
+            base_indirection_frame.pin_page()
+            # base_indirection_frame.page.display_internal_memory()
+            print("updating indirection w/",tail_record_rid, "which is on page:", base_page_indirection_num)
+            base_indirection_frame.page.update_slot(base_rid, tail_record_rid)
+            if tail_record_rid < 93106729:
+                    print("was inserting indirection:", tail_record_rid)
+                    sys.exit(0)
+            base_indirection_frame.make_dirty()
+            # base_indirection_frame.page.display_internal_memory()
+            base_indirection_frame.unpin_page()
 
-        """UPDATE PAGE_DIRECTORY"""
-        directory = [tail_page_range_num, tail_page_num, tail_slot_num]
-        self.page_directory[tail_record_rid] = directory
+            """UPDATE PAGE_DIRECTORY"""
+            directory = [tail_page_range_num, tail_page_num, tail_slot_num]
+            # self.page_directory[tail_record_rid] = directory
 
-        self.tail_rid -= 1
-        print("End of update on key:", key,"\n")
+            self.tail_rid -= 1
+            print("End of update on key:", key,"\n")
 
     
     def merge(self, key):
