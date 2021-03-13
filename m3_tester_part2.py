@@ -26,6 +26,9 @@ try:
 except Exception as e:
     print('Index API not implemented properly, tests may fail.')
 
+
+
+
 transaction_workers = []
 insert_transactions = []
 select_transactions = []
@@ -42,26 +45,26 @@ worker_keys = [ {} for t in transaction_workers ]
 
 
 
-# for i in range(0, 1000):
 for i in range(0, 1000):
     key = 92106429 + i
     keys.append(key)
     i = i % num_threads
+
     records[key] = [key, randint(i * 20, (i + 1) * 20), randint(i * 20, (i + 1) * 20), randint(i * 20, (i + 1) * 20), randint(i * 20, (i + 1) * 20)]
     q = Query(grades_table)
+
     # print("adding to worker", i, *records[key])
     # insert_transactions[i].add_query(q.insert, *records[key])
     q.insert(*records[key])
-    # print("worker_keys:" worker_keys)
-    # worker_keys[i][key] = True
-    worker_keys[0][key] = True
+
+    worker_keys[i][key] = True
+    # worker_keys[0][key] = True
 
 
 t = 0
 _records = [records[key] for key in keys]
 # for c in range(grades_table.num_columns):
 for c in range(1):
-
     _keys = sorted(list(set([record[c] for record in _records])))
     index = {v: [record for record in _records if record[c] == v] for v in _keys}
     for key in _keys:
@@ -73,6 +76,7 @@ for c in range(1):
             query = Query(grades_table)
             select_transactions[t % num_threads].add_query(query.select, key, c, [1, 1, 1, 1, 1])
         t += 1
+
 
 for j in range(0, num_threads):
     for key in worker_keys[j]:
@@ -87,12 +91,12 @@ for j in range(0, num_threads):
 
 
 count = 0
-# print(len(transaction_workers))
-# for i in range(len(transaction_workers)):
-#     print("Transaction Worker:", count)
-#     #print(transaction_workers[i].display_worker())
-#     transaction_workers[i].display_worker()
-#     count += 1
+print(len(transaction_workers))
+for i in range(len(transaction_workers)):
+    print("Transaction Worker:", count)
+    #print(transaction_workers[i].display_worker())
+    transaction_workers[i].display_worker()
+    count += 1
     
 # print("LIST")
 # for item in THREAD_MASTER:
