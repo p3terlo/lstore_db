@@ -92,4 +92,4 @@ class Query:
         return False
 
     def merge(self, key):
-        self.table.merge(key)
+        self.table.merge2(key)

@@ -25,6 +25,8 @@ class Database():
 
     def close(self):
         self.bufferpool.evict_all()
+        for i in self.tables:
+            self.tables[i].endBackground()
         # self.bufferpool.print_pool()
         # pass
 
@@ -32,6 +34,7 @@ class Database():
     def create_table(self, name, num_columns, key):
         table = Table(name, num_columns, key)
         table.pass_bufferpool(self.bufferpool)
+        table.setUpBackgroundThread()
         if name in self.tables:
             print("create_table Error: Table with name %s already exists" % (name))
         else:

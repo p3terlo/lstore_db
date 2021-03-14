@@ -4,6 +4,7 @@ from .index import Index
 from .page import *
 from .bufferpool import BufferPool
 import threading
+import copy
 
 import time
 
@@ -40,6 +41,9 @@ class Table:
         self.base_rid = 1
         self.tail_rid = MAX_INT
         self._key_lock = threading.Lock()
+
+        self.number_of_updates = 0
+        self.terminate = 0
 
 
     def pass_bufferpool(self, bufferpool):
@@ -137,7 +141,19 @@ class Table:
         
         return schema
     
+    def create_consolidated_record(self, indirection, *columns):
+        # Create record
+        rid = self.base_rid
+        record_key = columns[self.key]
+        milliseconds = int(round(time.time() * 1000))
+        schema = 0
 
+        record_col = [rid, indirection, milliseconds, schema]
+        
+        for column in columns:
+            record_col.append(column)
+
+        return Record(rid, record_key, record_col)
 
     def create_base_record(self, *columns):
         # Create record
@@ -388,6 +404,7 @@ class Table:
 
         # self.update_base_indirection(base_rid, tail_record_rid)
         self.append_tail(schema,base_indirection_val, base_rid, *columns)
+        self.number_of_updates +=1
 
         return True
 
@@ -648,6 +665,102 @@ class Table:
         else:
             return
 
+
+  
+    def merge2(self, key):
+        # print("doing a merge")
+        base_rid = self.index.locate(column=0, value=key)[0]
+        if base_rid == -1:
+            return False
+
+
+        #Get page locations of base record
+        page_dict = self.page_directory[base_rid]
+        base_page_num = page_dict[PAGE_NUM_COL]
+        base_slot_num = page_dict[SLOT_NUM_COL]
+        base_first_column_num = base_page_num + NUM_DEFAULT_COLUMNS
+        base_page_indirection_num = base_page_num + INDIRECTION_COLUMN
+
+        #getting base_page
+        columns = []
+        for i in range(NUM_DEFAULT_COLUMNS, self.get_total_columns()):
+            frame = self.get_frame(base_page_num + i)
+            value = frame.get_slot(base_slot_num)
+            columns.append(value)
+
+
+        #Get indirection frame & value
+        base_indirection_frame = self.get_frame(base_page_indirection_num)
+        indirection_value = base_indirection_frame.page.grab_slot(base_slot_num)
+
+        #Previously updated
+        if indirection_value != NULL_PTR:
+            #Grab newest tail record
+            total_columns = self.num_columns + NUM_DEFAULT_COLUMNS
+            tail_page_dict = self.calculate_tail_page_numbers(total_columns, indirection_value)
+            tail_page_num = tail_page_dict[PAGE_NUM_COL]
+            tail_slot_num = tail_page_dict[SLOT_NUM_COL]
+            tail_first_column_num = tail_page_num + NUM_DEFAULT_COLUMNS
+            tail_schema_num = tail_page_num + SCHEMA_ENCODING_COLUMN
+
+            tail_schema_frame = self.get_frame_tail(tail_schema_num)
+            tail_schema_int = tail_schema_frame.page.grab_slot(tail_slot_num)
+            tail_schema_string = self.schema_int_to_string(tail_schema_int, self.num_columns)
+
+            for i in range(self.num_columns):
+                if tail_schema_string[i] == "1":
+                    updated_value_frame = self.get_frame_tail(tail_first_column_num + i)
+                    # updated_value_frame.pin_page()
+                    updated_value = updated_value_frame.page.grab_slot(tail_slot_num)
+                    # updated_value_frame.unpin_page()
+                    columns[i] = updated_value
+                    # base_page_frame = self.get_frame(base_first_column_num + i)
+                    # base_page_frame.pin_page()
+                    # base_page_frame.page.update_slot(base_rid, updated_value)
+                    # base_page_frame.make_dirty()
+                    # base_page_frame.unpin_page()
+
+            #Have complete column start insert
+
+            print(f"merging. this is the new base record {columns}")
+
+            base_record = self.create_consolidated_record(indirection_value,*columns)
+            record_col = base_record.columns
+            total_columns = len(record_col)
+
+            page_dict = self.calculate_base_page_numbers(total_columns, self.base_rid)
+            starting_page_num = page_dict[PAGE_NUM_COL]
+
+            for i in range(total_columns):
+                current_page = starting_page_num + i
+                frame = self.get_frame(current_page)
+                frame.write_slot(self.base_rid, record_col[i])
+                frame.make_dirty()
+
+            #index/page_directory
+            # self.index.insert(columns[self.key], self.base_rid)
+            # directory = [page_dict[PAGE_RANGE_COL], starting_page_num, page_dict[SLOT_NUM_COL]]
+            # self.page_directory[self.base_rid] = directory
+            # self.base_rid += 1
+
+
+            print("changing to new indirection")
+            base_indirection_frame = self.get_frame(base_page_indirection_num)
+            base_indirection_frame.pin_page()
+            base_indirection_frame.page.update_slot(base_rid, indirection_value)
+            base_indirection_frame.make_dirty()
+            base_indirection_frame.unpin_page()
+
+            #index/page_directory
+            # self.index.insert(columns[self.key], self.base_rid)
+            directory = [page_dict[PAGE_RANGE_COL], starting_page_num, page_dict[SLOT_NUM_COL]]
+            self.page_directory[self.base_rid] = directory
+            self.base_rid += 1
+
+            return
+        else:
+            return
+
 # copy_of_base_pages = []
         # for _ in range(NUM_DEFAULT_COLUMNS + self.num_columns):
         #     new_base_page = Page()
@@ -665,7 +778,27 @@ class Table:
             return False
 
 
+    def runMergeInBackground(self):
+        while 1 and self.terminate == 0:
+            if (self.number_of_updates % 10000) == 0 and (self.number_of_updates != 0):
+                self.number_of_updates +=1
+                print("starting a merge process", self.number_of_updates)
+                # copy_page_directory = copy.copy(self.page_directory)
+                # copy_page_directory = self.page_directory.copy()
+                copy_page_directory = dict(self.page_directory)
+                for key in copy_page_directory:
+                    if(self.terminate != 0):
+                        break
+                    self.merge2(key)
 
+
+    def setUpBackgroundThread(self):
+        a = threading.Thread(target=self.runMergeInBackground, name='Thread-a', daemon=True)
+        a.daemon = True
+        a.start()
+
+    def endBackground(self):
+        self.terminate = 1
 
 
 
