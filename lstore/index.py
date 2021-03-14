@@ -1,4 +1,3 @@
-
 from BTrees.IOBTree import IOBTree 
 """
 A data structure holding indices for various columns of a table. Key column should be indexd by default, other columns can be indexed through this object. Indices are usually B-Trees, but other data structures can be used as well.
@@ -10,6 +9,17 @@ class Index:
         # One index for each table. All our empty initially.
         self.indices = [None] *  table.num_columns
         self.create_index(column_number=0)
+
+
+    def __str__(self):
+        output = "\nTable index item count: \n"
+        for i, index in enumerate(self.indices):
+            if type(index) is IOBTree:
+                output += f"Column {i}: {len(index)}\n"
+            else:
+                output += f"Column {i}: No Index Initialized.\n"
+        return output
+
 
     """
     # returns the location of all records with the given value on column "column"
