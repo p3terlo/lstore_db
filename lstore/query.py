@@ -31,7 +31,7 @@ class Query:
     def insert(self, *columns):
         try:
             schema_encoding = '0' * self.table.num_columns
-            self.table.add(*columns)
+            self.table.add2(*columns)
             return True  
         except:
             return False
@@ -46,16 +46,16 @@ class Query:
     # Assume that select will never be called on a key that doesn't exist
     """
     def select(self, key, column, query_columns):
-        selectedObject = self.table.select(key, column, query_columns)
+        # page_id = self.table.fetch_page(key)
+        selectedObject = self.table.select2(key, column, query_columns)
         return selectedObject
-
     """
     # Update a record with specified key and columns
     # Returns True if update is succesful
     # Returns False if no records exist with given key or if the target record cannot be accessed due to 2PL locking
     """
     def update(self, key, *columns): 
-        return self.table.update(key, *columns)
+        return self.table.update2(key, *columns)
 
 
     """
@@ -88,3 +88,5 @@ class Query:
             return u
         return False
 
+    def merge(self, key):
+        self.table.merge(key)

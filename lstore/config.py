@@ -2,8 +2,18 @@
 # PageSize, StartRID, etc..
 import sys
 
+
+THREAD_MASTER = []
+SUCCESS = True
+FAIL = False
+
+NUM_QUEUES = 4
+NUM_THREADS = 2
+
+BUFF_POOL_SIZE = 5000
+
 PAGE_RANGE = 2000
-PAGE_CAPACITY_IN_BYTES = 32
+PAGE_CAPACITY_IN_BYTES = 8000
 INTEGER_CAPACITY_IN_BYTES = 8
 
 # Macros for table.py
