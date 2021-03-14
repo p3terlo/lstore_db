@@ -5,8 +5,6 @@ from lstore.transaction import Transaction
 from lstore.transaction_worker import TransactionWorker
 from lstore.config import *
 
-import time
-
 import sys
 from random import choice, randint, sample, seed
 
@@ -20,16 +18,13 @@ records = {}
 seed(3562901)
 num_threads = 8
 
-try:
-    grades_table.index.create_index(1)
-    grades_table.index.create_index(2)
-    grades_table.index.create_index(3)
-    grades_table.index.create_index(4)
-except Exception as e:
-    print('Index API not implemented properly, tests may fail.')
-
-
-
+# try:
+#     grades_table.index.create_index(1)
+#     grades_table.index.create_index(2)
+#     grades_table.index.create_index(3)
+#     grades_table.index.create_index(4)
+# except Exception as e:
+#     print('Index API not implemented properly, tests may fail.')
 
 transaction_workers = []
 insert_transactions = []
@@ -47,21 +42,18 @@ worker_keys = [ {} for t in transaction_workers ]
 
 
 
-# for i in range(0, 1000):
-for i in range(0, 96):
+for i in range(0, 1000):
     key = 92106429 + i
     keys.append(key)
     i = i % num_threads
-
     records[key] = [key, randint(i * 20, (i + 1) * 20), randint(i * 20, (i + 1) * 20), randint(i * 20, (i + 1) * 20), randint(i * 20, (i + 1) * 20)]
     q = Query(grades_table)
-
     # print("adding to worker", i, *records[key])
     # insert_transactions[i].add_query(q.insert, *records[key])
     q.insert(*records[key])
-
+    # print("worker_keys:" worker_keys)
+    # worker_keys[i][key] = True
     worker_keys[i][key] = True
-    # worker_keys[0][key] = True
 
 
 t = 0
@@ -80,31 +72,25 @@ for c in range(1):
             select_transactions[t % num_threads].add_query(query.select, key, c, [1, 1, 1, 1, 1])
         t += 1
 
-
-query = Query(grades_table)
-
-
 for j in range(0, num_threads):
     for key in worker_keys[j]:
         updated_columns = [None, None, None, None, None]
-        # for i in range(1, grades_table.num_columns):
-        for i in range(1, 2):
+        for i in range(1, grades_table.num_columns):
             value = randint(0, 20)
             updated_columns[i] = value
             records[key][i] = value
-            # query = Query(grades_table)
+            query = Query(grades_table)
             update_transactions[j].add_query(query.update, key, *updated_columns)
-            # query.update(key, *updated_columns)
             updated_columns = [None, None, None, None, None]
 
 
 count = 0
-print(len(transaction_workers))
-for i in range(len(transaction_workers)):
-    print("Transaction Worker:", count)
-    #print(transaction_workers[i].display_worker())
-    transaction_workers[i].display_worker()
-    count += 1
+# print(len(transaction_workers))
+# for i in range(len(transaction_workers)):
+#     print("Transaction Worker:", count)
+#     #print(transaction_workers[i].display_worker())
+#     transaction_workers[i].display_worker()
+#     count += 1
     
 # print("LIST")
 # for item in THREAD_MASTER:
@@ -123,8 +109,6 @@ execution_manager.init_threads()
 #      transaction_worker.run()
 
 #Wait for all the threads
-
-print("-------------------------------------------------")
 
 score = len(keys)
 for key in keys:

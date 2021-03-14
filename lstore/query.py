@@ -1,5 +1,6 @@
 from lstore.table import Table, Record
 from lstore.index import Index
+import threading
 
 class Query:
     """
@@ -11,6 +12,8 @@ class Query:
 
     def __init__(self, table):
         self.table = table
+        self._key_lock = threading.Lock()
+
         pass
 
     """
@@ -47,7 +50,7 @@ class Query:
     """
     def select(self, key, column, query_columns):
         # page_id = self.table.fetch_page(key)
-        selectedObject = self.table.select(key, column, query_columns)
+        selectedObject = self.table.select2(key, column, query_columns)
         return selectedObject
     """
     # Update a record with specified key and columns
@@ -55,7 +58,7 @@ class Query:
     # Returns False if no records exist with given key or if the target record cannot be accessed due to 2PL locking
     """
     def update(self, key, *columns): 
-        return self.table.update(key, *columns)
+        return self.table.update2(key, *columns)
 
 
     """

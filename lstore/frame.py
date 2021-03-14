@@ -17,6 +17,8 @@ class Frame:
         self.is_dirty = False
         self.is_tail = False
 
+    def get_slot(self, slot_num):
+        return self.page.grab_slot(slot_num)
 
     def pin_page(self):
         self.outstanding_transactions += 1
@@ -34,6 +36,17 @@ class Frame:
     def clean_page(self):
         self.is_dirty = False
 
+    def update_val(self, rid, data):
+        self.pin_page()
+        self.page.update_slot(rid, data)
+        self.make_dirty()
+        self.unpin_page()
+
+    def write_tail_slot(self, tail_rid, data):
+        self.pin_page()
+        self.page.write_slot_tail(tail_rid, data)
+        self.make_dirty()
+        self.unpin_page()
 
     def write_slot(self, rid, data):#Alvin
         self.pin_page()
@@ -61,7 +74,6 @@ class Frame:
         file.seek(seek_offset * seek_mult)
         data = file.read(seek_mult)
         file.close()
-
 
         self.page.data = data
         
@@ -107,6 +119,7 @@ class Frame:
 
         file= open(file_name, mode) #binary
         file.seek(seek_offset * seek_mult)
+        print(f"writing to page {page_num} at offset: {seek_offset * seek_mult}")
         file.write(page.data)
         file.close()
         

@@ -65,15 +65,16 @@ class BufferPool:
             if sys.getsizeof(data) < 80:
                 print("Allocating space for empty page of size:---------------------",sys.getsizeof(data))
                 page.data = bytearray(PAGE_CAPACITY_IN_BYTES)
-            else:
-                print(f"Page {page.page_num}: in Bufferpool for Scan...")
-                
+
         frame = Frame(page_num, page, table_name, num_columns)
         self.frame_cache[page_num] = frame
         self.frame_cache.move_to_end(page_num)
         self.number_current_pages += 1
         return frame
 
+        self.frame_cache[page_to_put_in_pool] = frame
+        self.frame_cache.move_to_end(page_to_put_in_pool)
+        print("DID THIS WORK")
 
     
     def read_frame_tail(self, table_name, num_columns, page_num): #Alvin
@@ -84,11 +85,11 @@ class BufferPool:
 
         print(file_name)
         if not os.path.exists(file_name): 
-            print("goes in here")
+            #print("goes in here")
             frame_to_return = self.make_new_frame(table_name,num_columns,page_num)
             frame_to_return.is_tail = True
             page_to_put_in_pool = (page_num * -1) - num_columns
-            print("Tail page being inserted into buffer:", page_to_put_in_pool)
+            #print("Tail page being inserted into buffer:", page_to_put_in_pool)
             self.frame_cache[page_to_put_in_pool] = frame_to_return
             self.frame_cache.move_to_end(page_to_put_in_pool)
             self.number_current_pages += 1
@@ -124,6 +125,8 @@ class BufferPool:
 
         self.number_current_pages += 1
 
+        frame.is_tail = True
+
         return frame
 
     def evict(self): #Alvin
@@ -137,9 +140,7 @@ class BufferPool:
         is_dirty = lru_frame.is_dirty
 
         if (is_dirty):
-            # print("IS DIRTYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYy")
             if lru_frame.is_tail == True:
-                # print("WRITING FRAME TO TAILLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL ", key)
                 lru_frame.write_frame_tail(self.path)
                 lru_frame.is_tail = False
             else:
@@ -149,42 +150,38 @@ class BufferPool:
     def fetch_frame(self, table_name, number_columns, page_num): #Alvin
         # self.print_pool()
         with self._key_lock:
-            print("Basenum to find in cache",page_num)
+            #print("Basenum to find in cache",page_num)
 
 
             if page_num not in self.frame_cache:
-
                 if (self.number_current_pages >= self.capacity) and len(self.frame_cache) != 0: #eviction
-                    print("BASE_NUM_CUR_PAGE:",self.number_current_pages, "CAP:",self.capacity)
-                    print("evicting base page---------------------")
+                    #print("BASE_NUM_CUR_PAGE:",self.number_current_pages, "CAP:",self.capacity)
+                    #print("evicting base page---------------------")
                     self.evict()
                 return self.read_frame(table_name, number_columns, page_num)
             else:
-                print("page was in cache")
+                #print("page was in cache")
                 self.frame_cache.move_to_end(page_num)
                 return self.frame_cache[page_num]
 
 
     def fetch_frame_tail(self, table_name, number_columns, page_num): #Alvin
         with self._key_lock:
-            print(f"page_num {page_num}")
             page_num = (page_num*-1) - number_columns #0->-9, 1->-10
 
-            print("TailNum to find in cache",page_num)
+            #print("TailNum to find in cache",page_num)
 
             if page_num not in self.frame_cache:
                 if (self.number_current_pages >= self.capacity) and len(self.frame_cache) != 0: #eviction
-                    print("TAIL_NUM_CUR_PAGE:",self.number_current_pages, "CAP:",self.capacity)
-                    print("evicting tail page---------------------")
+                   # print("TAIL_NUM_CUR_PAGE:",self.number_current_pages, "CAP:",self.capacity)
+                    #print("evicting tail page---------------------")
 
                     self.evict()
 
                 page_num_to_read = (page_num + number_columns) * -1
-
-                print(f"Reading tailpage: {page_num_to_read}")
                 return self.read_frame_tail(table_name, number_columns, page_num_to_read)
             else:
-                print("tailpage was in cache")
+                #print("tailpage was in cache")
                 self.frame_cache.move_to_end(page_num)
                 frame_to_return = self.frame_cache[page_num]
                 frame_to_return.is_tail = True
@@ -299,11 +296,11 @@ class BufferPool:
         return frame
 
 
+    
     def evict_all(self):
         while len(self.frame_cache) != 0:
             self.evict()
  
-
     # def read_page_from_disk(self, table_name: str, num_columns: int, page_num: int) -> Frame:
     #     """
     #     Given Table Name, its number of columns and it's page number, we grab page from disk.
