@@ -119,6 +119,7 @@ class Frame:
 
         file= open(file_name, mode) #binary
         file.seek(seek_offset * seek_mult)
+        print(f"writing to page {page_num} at offset: {seek_offset * seek_mult}")
         file.write(page.data)
         file.close()
         

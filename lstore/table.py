@@ -3,6 +3,7 @@ from .config import *
 from .index import Index
 from .page import *
 from .bufferpool import BufferPool
+import threading
 
 import time
 
@@ -38,6 +39,8 @@ class Table:
 
         self.base_rid = 1
         self.tail_rid = MAX_INT
+        self._key_lock = threading.Lock()
+
 
     def pass_bufferpool(self, bufferpool):
         self.bufferpool = bufferpool
@@ -347,7 +350,6 @@ class Table:
     """
 
     def update2(self, key, *columns):
-
         #checking if in index/deleted
         base_rid =  base_rid = self.index.locate(column=0, value=key)[0]
         if base_rid == -1:
@@ -356,7 +358,7 @@ class Table:
         page_dict = self.page_directory[base_rid]
         start_basepage_num = page_dict[PAGE_NUM_COL]
         base_slot = page_dict[SLOT_NUM_COL]
-        
+
         #update_schema
         schema = self.schema_array_to_schema_int(*columns)
 
@@ -375,16 +377,13 @@ class Table:
             #grabbing schema strings and combining them
             update_schema = self.schema_int_to_string(schema, self.num_columns) #new
             indirection_schema = self.get_indirection_schema(base_indirection_val) #old
-            
             self.update_new_tail_record(tail_record_col, cur_tail_dict, update_schema, indirection_schema)
         else:
             print("NO PREV UPDATING SCHEMA:", tail_record_col[SCHEMA_ENCODING_COLUMN])
 
+    # print("RECORDTOTAIL",tail_record_col)
+    #adding tail_record and updating base_indirection
 
-       # print("RECORDTOTAIL",tail_record_col)
-       # print()
-
-        #adding tail_record and updating base_indirection
         self.add_tail_record(tail_record_col, tail_record_rid)
         self.update_base_indirection(base_rid, tail_record_rid)
             

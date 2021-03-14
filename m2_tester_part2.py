@@ -1,9 +1,9 @@
-from template.db import Database
-from template.query import Query
-from template.config import init
+from lstore.db import Database
+from lstore.query import Query
+# from lstore.config import init
 
 from random import choice, randint, sample, seed
-init()
+# init()
 
 db = Database()
 db.open('./ECS165')

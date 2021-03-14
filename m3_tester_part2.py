@@ -54,7 +54,7 @@ for i in range(0, 1000):
     q.insert(*records[key])
     # print("worker_keys:" worker_keys)
     # worker_keys[i][key] = True
-    worker_keys[0][key] = True
+    worker_keys[i][key] = True
 
 
 t = 0

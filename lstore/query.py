@@ -1,5 +1,6 @@
 from lstore.table import Table, Record
 from lstore.index import Index
+import threading
 
 class Query:
     """
@@ -11,6 +12,8 @@ class Query:
 
     def __init__(self, table):
         self.table = table
+        self._key_lock = threading.Lock()
+
         pass
 
     """
