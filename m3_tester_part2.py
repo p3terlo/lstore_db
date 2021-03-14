@@ -61,7 +61,6 @@ t = 0
 _records = [records[key] for key in keys]
 # for c in range(grades_table.num_columns):
 for c in range(1):
-
     _keys = sorted(list(set([record[c] for record in _records])))
     index = {v: [record for record in _records if record[c] == v] for v in _keys}
     for key in _keys:

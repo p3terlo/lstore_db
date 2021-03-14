@@ -361,33 +361,58 @@ class Table:
 
         #update_schema
         schema = self.schema_array_to_schema_int(*columns)
-
         #Create tail record and grab columns
-        tail_record_to_add = self.create_tail_record(*columns, previous_rid=base_rid, schema=schema)
-        tail_record_rid = tail_record_to_add.rid        
-        tail_record_col = tail_record_to_add.columns
 
         #base_indirection
         base_indirection_val = self.get_indirection(start_basepage_num, base_slot)
-        if base_indirection_val != NULL_PTR:
-            print("update_tail")
-            tail_record_col[INDIRECTION_COLUMN] = base_indirection_val
-            cur_tail_dict = self.page_directory[base_indirection_val]
 
-            #grabbing schema strings and combining them
-            update_schema = self.schema_int_to_string(schema, self.num_columns) #new
-            indirection_schema = self.get_indirection_schema(base_indirection_val) #old
-            self.update_new_tail_record(tail_record_col, cur_tail_dict, update_schema, indirection_schema)
-        else:
-            print("NO PREV UPDATING SCHEMA:", tail_record_col[SCHEMA_ENCODING_COLUMN])
+        # with self._key_lock:
+            # tail_record_to_add = self.create_tail_record(*columns, previous_rid=base_rid, schema=schema)
+            # tail_record_rid = tail_record_to_add.rid        
+            # tail_record_col = tail_record_to_add.columns
 
-    # print("RECORDTOTAIL",tail_record_col)
-    #adding tail_record and updating base_indirection
+            # if base_indirection_val != NULL_PTR:
+            #     print("update_tail")
+            #     tail_record_col[INDIRECTION_COLUMN] = base_indirection_val
+            #     cur_tail_dict = self.page_directory[base_indirection_val]
 
-        self.add_tail_record(tail_record_col, tail_record_rid)
-        self.update_base_indirection(base_rid, tail_record_rid)
-            
+            #     #grabbing schema strings and combining them
+            #     update_schema = self.schema_int_to_string(schema, self.num_columns) #new
+            #     indirection_schema = self.get_indirection_schema(base_indirection_val) #old
+            #     self.update_new_tail_record(tail_record_col, cur_tail_dict, update_schema, indirection_schema)
+            # else:
+            #     print("NO PREV UPDATING SCHEMA:", tail_record_col[SCHEMA_ENCODING_COLUMN])
+
+            #     #adding tail_record and updating base_indirection
+            # self.add_tail_record(tail_record_col, tail_record_rid)
+
+        # self.update_base_indirection(base_rid, tail_record_rid)
+        self.append_tail(schema,base_indirection_val, base_rid, *columns)
+
         return True
+
+    def append_tail(self, schema, base_indirection_val, base_rid, *columns):
+        with self._key_lock:
+            tail_record_to_add = self.create_tail_record(*columns, previous_rid=base_rid, schema=schema)#=========
+            tail_record_rid = tail_record_to_add.rid        
+            tail_record_col = tail_record_to_add.columns
+
+            if base_indirection_val != NULL_PTR:
+                print("update_tail")
+                tail_record_col[INDIRECTION_COLUMN] = base_indirection_val
+                cur_tail_dict = self.page_directory[base_indirection_val]
+
+                #grabbing schema strings and combining them
+                update_schema = self.schema_int_to_string(schema, self.num_columns) #new
+                indirection_schema = self.get_indirection_schema(base_indirection_val) #old
+                self.update_new_tail_record(tail_record_col, cur_tail_dict, update_schema, indirection_schema)
+            else:
+                print("NO PREV UPDATING SCHEMA:", tail_record_col[SCHEMA_ENCODING_COLUMN])
+
+            #adding tail_record and updating base_indirection
+            self.add_tail_record(tail_record_col, tail_record_rid)#=================
+            self.update_base_indirection(base_rid, tail_record_rid)
+
 
     def update_new_tail_record(self, tail_record_col, old_tail_dict, update_schema, old_schema):
         old_tail_slot = old_tail_dict[SLOT_NUM_COL]
