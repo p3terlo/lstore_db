@@ -1,6 +1,7 @@
 from threading import Thread
 from lstore.config import NUM_QUEUES, NUM_THREADS
 from lstore.transaction import Transaction
+from lstore.config import *
 
 
 # Create a Thread using Class
@@ -38,9 +39,9 @@ class PlanningThread(Thread):
     def print_queue(self):
         i = 0
         for queue in self.queues:
-            print(f"Queue #{i}")
+            if DEBUG_MODE: print(f"Queue #{i}")
             for query in queue:
-                print(query)
+                if DEBUG_MODE: print(query)
 
             i += 1
 
@@ -75,9 +76,9 @@ class PlanningThreadManager():
 
     def print_threads(self):
         for priority, thread in self.threads.items():
-            print(f"Thread #{priority}")
+            if DEBUG_MODE: print(f"Thread #{priority}")
             thread.print_queue()
-            print("\n")
+            if DEBUG_MODE: print("\n")
 
 
 class ExecutionThread(Thread):

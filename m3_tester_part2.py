@@ -25,6 +25,7 @@ try:
     grades_table.index.create_index(4)
 except Exception as e:
     print('Index API not implemented properly, tests may fail.')
+    sys.exit(0)
 
 transaction_workers = []
 insert_transactions = []
@@ -41,26 +42,20 @@ for i in range(num_threads):
 worker_keys = [ {} for t in transaction_workers ]
 
 
-
-# for i in range(0, 1000):
 for i in range(0, 1000):
     key = 92106429 + i
     keys.append(key)
     i = i % num_threads
     records[key] = [key, randint(i * 20, (i + 1) * 20), randint(i * 20, (i + 1) * 20), randint(i * 20, (i + 1) * 20), randint(i * 20, (i + 1) * 20)]
     q = Query(grades_table)
-    # print("adding to worker", i, *records[key])
     # insert_transactions[i].add_query(q.insert, *records[key])
     q.insert(*records[key])
-    # print("worker_keys:" worker_keys)
-    # worker_keys[i][key] = True
     worker_keys[i][key] = True
 
 
 t = 0
 _records = [records[key] for key in keys]
-# for c in range(grades_table.num_columns):
-for c in range(1):
+for c in range(grades_table.num_columns):
     _keys = sorted(list(set([record[c] for record in _records])))
     index = {v: [record for record in _records if record[c] == v] for v in _keys}
     for key in _keys:
@@ -90,7 +85,7 @@ count = 0
 
 manager = PlanningThreadManager(THREAD_MASTER)
 manager.init_threads()
-manager.print_threads()
+# manager.print_threads()
 
 execution_manager = ExecutionThreadManager(manager)
 execution_manager.init_threads()

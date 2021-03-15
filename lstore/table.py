@@ -226,8 +226,12 @@ class Table:
 
     #new_func: get_indirection, get_total_columns, get_indirection_schema, get_recent_record
     def select2(self, key, column, query_columns):  
-        print("Selecting key:", key)
+        if DEBUG_MODE: print("Selecting key:", key)
         
+        if column != 0:
+            return [False]
+
+
         #get_rid, return if false
         rid = self.index.locate(column=0, value=key)[0]
         if rid == None:
@@ -246,7 +250,7 @@ class Table:
             value = frame.get_slot(base_slot)
             base_record.append(value)
             
-        print("base", base_record)
+        if DEBUG_MODE: print("base", base_record)
 
         if (base_indirection_val != NULL_PTR) and (self.tps >= base_indirection_val): #getting recent_record
             self.get_recent_record(base_indirection_val, base_record)
@@ -277,7 +281,7 @@ class Table:
         num = self.num_columns * -1
         schema_string = schema_string[num:]
 
-        print("SCHEMA_STRING",schema_string)
+        if DEBUG_MODE: print("SCHEMA_STRING",schema_string)
    
         return schema_string
 
@@ -295,80 +299,6 @@ class Table:
                 #print("tail_page_num", tail_page_num, "tail_slot_num:", tail_slot_num, "i", i)
                 base_record[i] = tail_page_to_add_frame.get_slot(tail_slot_num)
 
-        
-    """
-    def select(self, key, column, query_columns):
-        print("Selecting key:", key)
-        record_col = []
-        record_array = []
-
-        rid = self.index.locate(column=0, value=key)[0]
-
-        if rid == None:
-            return [False]
-
-        page_dict = self.page_directory[rid]
-        starting_page_num = page_dict[PAGE_NUM_COL]
-        slot_num = page_dict[SLOT_NUM_COL]
-        indirection_page_num = starting_page_num + INDIRECTION_COLUMN
-        total_columns = self.num_columns + NUM_DEFAULT_COLUMNS
-        base_indirection_frame = self.get_frame(indirection_page_num)
-
-        #GETS ALL VALUES
-        for i in range(NUM_DEFAULT_COLUMNS, NUM_DEFAULT_COLUMNS + self.num_columns):
-            # if query_columns[i - NUM_DEFAULT_COLUMNS] == 1:
-            frame = self.get_frame(starting_page_num+i)
-            value = frame.get_slot(slot_num)
-            record_col.append(value)
-
-
-        # for i in range(NUM_DEFAULT_COLUMNS, NUM_DEFAULT_COLUMNS + self.num_columns):
-        #     if query_columns[i - NUM_DEFAULT_COLUMNS] == 1:
-        #         frame = self.get_frame(starting_page_num+i)
-        #         value = frame.page.grab_slot(slot_num)
-        #         record_col.append(value)
-
-        indirection_value = base_indirection_frame.get_slot(slot_num)
-
-        if indirection_value != NULL_PTR:
-            print("PREVIOUS UPDATES: INDIRECTION =", indirection_value)
-            tail_page_dict = self.calculate_tail_page_numbers(total_columns, indirection_value)
-            tail_page_num = tail_page_dict[PAGE_NUM_COL]
-            tail_slot_num = tail_page_dict[SLOT_NUM_COL]
-            tail_page_frame = self.get_frame_tail(tail_page_num + SCHEMA_ENCODING_COLUMN)
-            schema_int = tail_page_frame.get_slot(tail_slot_num)
-            print("SCHEMA_INT", schema_int, "tail_page_num",tail_page_num, "tail_slot_num", tail_slot_num, "total_columns",total_columns)
-             # Convert from int to useable string format EX: 10 -> "00010"
-            leadingZeros = "0" * self.num_columns
-            schema_string = leadingZeros + str(schema_int)
-            num = self.num_columns * -1
-            schema_string = schema_string[num:]
-
-            print("SCHEMA_STRING",schema_string)
-            for i in range(len(schema_string)):
-                if schema_string[i] == "1": 
-                    print(i)
-                    tail_page_to_add_frame = self.get_frame_tail(tail_page_num + NUM_DEFAULT_COLUMNS+i)
-                    # tail_page_to_add_frame.pin_page()
-                    print("tail_page_num", tail_page_num, "tail_slot_num:", tail_slot_num, "i", i)
-                    record_col[i] = tail_page_to_add_frame.get_slot(tail_slot_num)
-                    # tail_page_to_add_frame.unpin_page()
-
-        print(record_col)
-        record_to_return = []
-
-        for i in range(len(record_col)):
-            if query_columns[i] == 1:
-                record_to_return.append(record_col[i])
-
-        record_col = record_to_return
-
-        record_to_return = Record(rid,key,record_col)  
-        record_array.append(record_to_return)
-        print("End of select on key:", key, "\n")
-
-        return record_array
-    """
 
     def update2(self, key, *columns):
         #checking if in index/deleted
@@ -387,27 +317,6 @@ class Table:
         #base_indirection
         base_indirection_val = self.get_indirection(start_basepage_num, base_slot)
 
-        # with self._key_lock:
-            # tail_record_to_add = self.create_tail_record(*columns, previous_rid=base_rid, schema=schema)
-            # tail_record_rid = tail_record_to_add.rid        
-            # tail_record_col = tail_record_to_add.columns
-
-            # if base_indirection_val != NULL_PTR:
-            #     print("update_tail")
-            #     tail_record_col[INDIRECTION_COLUMN] = base_indirection_val
-            #     cur_tail_dict = self.page_directory[base_indirection_val]
-
-            #     #grabbing schema strings and combining them
-            #     update_schema = self.schema_int_to_string(schema, self.num_columns) #new
-            #     indirection_schema = self.get_indirection_schema(base_indirection_val) #old
-            #     self.update_new_tail_record(tail_record_col, cur_tail_dict, update_schema, indirection_schema)
-            # else:
-            #     print("NO PREV UPDATING SCHEMA:", tail_record_col[SCHEMA_ENCODING_COLUMN])
-
-            #     #adding tail_record and updating base_indirection
-            # self.add_tail_record(tail_record_col, tail_record_rid)
-
-        # self.update_base_indirection(base_rid, tail_record_rid)
         self.append_tail(schema,base_indirection_val, base_rid, *columns)
         self.number_of_updates +=1
 
@@ -420,7 +329,7 @@ class Table:
             tail_record_col = tail_record_to_add.columns
 
             if base_indirection_val != NULL_PTR:
-                print("update_tail")
+                if DEBUG_MODE: print("update_tail")
                 tail_record_col[INDIRECTION_COLUMN] = base_indirection_val
                 cur_tail_dict = self.page_directory[base_indirection_val]
 
@@ -429,7 +338,7 @@ class Table:
                 indirection_schema = self.get_indirection_schema(base_indirection_val) #old
                 self.update_new_tail_record(tail_record_col, cur_tail_dict, update_schema, indirection_schema)
             else:
-                print("NO PREV UPDATING SCHEMA:", tail_record_col[SCHEMA_ENCODING_COLUMN])
+                if DEBUG_MODE: print("NO PREV UPDATING SCHEMA:", tail_record_col[SCHEMA_ENCODING_COLUMN])
 
             #adding tail_record and updating base_indirection
             self.add_tail_record(tail_record_col, tail_record_rid)#=================
@@ -451,8 +360,8 @@ class Table:
 
 
         tail_record_col[SCHEMA_ENCODING_COLUMN] = int(new_schema_string)
-        print(new_schema_string)
-        print(tail_record_col)
+        if DEBUG_MODE: print(new_schema_string)
+        if DEBUG_MODE: print(tail_record_col)
         
 
     def add_tail_record(self, tail_record_col, tail_record_rid):
@@ -482,8 +391,8 @@ class Table:
 
     
     def update(self, key, *columns):
-        print("\nBeginning Update on key:", key)
-        print("will be applying:",columns)
+        if DEBUG_MODE: print("\nBeginning Update on key:", key)
+        if DEBUG_MODE: print("will be applying:",columns)
         #Get base record and base rid
         base_rid = self.index.locate(column=0, value=key)[0]
 
@@ -517,18 +426,18 @@ class Table:
         # print("Tail_page_num",tail_page_num, "Tail_slot_num",tail_slot_num)
 
         #Get base record indirection page
-        print("get_frame_indirection", key)
+        if DEBUG_MODE: print("get_frame_indirection", key)
         base_indirection_frame = self.get_frame(base_page_indirection_num)
         indirection_value = base_indirection_frame.page.grab_slot(slot_num)
 
         
-        print("Grabbing indirection:", indirection_value, "from page:", base_page_indirection_num)
+        if DEBUG_MODE: print("Grabbing indirection:", indirection_value, "from page:", base_page_indirection_num)
 
         if indirection_value != NULL_PTR:
-            print("Previously updated")
+            if DEBUG_MODE: print("Previously updated")
             #Grab Schema of old update
             record_col[INDIRECTION_COLUMN] = indirection_value
-            print("indirection:", indirection_value)
+            if DEBUG_MODE: print("indirection:", indirection_value)
 
 
             
@@ -536,40 +445,40 @@ class Table:
             old_update_starting_page = old_update_page_dict[PAGE_NUM_COL]
             old_update_schema_page = old_update_starting_page + SCHEMA_ENCODING_COLUMN
             # print("old_update_starting_page", old_update_starting_page)
-            print("get_frame_old_schema" ,key)
+            if DEBUG_MODE: print("get_frame_old_schema" ,key)
             old_schema_frame = self.get_frame_tail(old_update_schema_page)
             old_schema_frame.is_tail = True
             old_schema_int = old_schema_frame.page.grab_slot(old_update_page_dict[SLOT_NUM_COL])
 
             #Grab current schema
             current_schema_string = self.schema_int_to_string(schema, self.num_columns)
-            print("current_schema_string", current_schema_string)
+            if DEBUG_MODE: print("current_schema_string", current_schema_string)
             old_schema_string = self.schema_int_to_string(old_schema_int, self.num_columns)
             new_schema_string = self.combine_schemas(current_schema_string, old_schema_string, self.num_columns)
 
             # Grab updates from previous updates, don't grab new updates or will overwrite them
             for i in range(len(old_schema_string)):
                 if old_schema_string[i] == "1" and current_schema_string[i] != "1":
-                    print("get_frame_old_tail" ,key)
+                    if DEBUG_MODE: print("get_frame_old_tail" ,key)
                     old_tail_frame = self.get_frame_tail(old_update_starting_page + NUM_DEFAULT_COLUMNS + i)
                     old_tail_frame.is_tail = True
                     record_col[NUM_DEFAULT_COLUMNS + i] = old_tail_frame.page.grab_slot(old_update_page_dict[SLOT_NUM_COL])
 
-            print("New schema string:", new_schema_string, "New schema int:",int(new_schema_string))
+            if DEBUG_MODE: print("New schema string:", new_schema_string, "New schema int:",int(new_schema_string))
             record_col[SCHEMA_ENCODING_COLUMN] = int(new_schema_string)
             #sys.exit(0)
         else:
-            print("NO PREV UPDATING SCHEMA:", schema)
+            if DEBUG_MODE: print("NO PREV UPDATING SCHEMA:", schema)
             record_col[SCHEMA_ENCODING_COLUMN] = schema
 
         print("RECORDTOTAIL",record_col)
 
         for i in range(total_columns):
-            print("tail_page_num++++++", tail_page_num,"i", i)
+            if DEBUG_MODE: print("tail_page_num++++++", tail_page_num,"i", i)
 
             current_page = tail_page_num + i
             # print("Updating current_page:",current_page)
-            print("get_frame_tail_current",key)
+            if DEBUG_MODE: print("get_frame_tail_current",key)
             frame = self.get_frame_tail(current_page)
             frame.write_tail_slot(tail_record_rid, record_col[i])
 
@@ -586,7 +495,7 @@ class Table:
             """
 
         #Write new tail record to base indirection
-        print("get_frame_indirection_frame", key)
+        if DEBUG_MODE: print("get_frame_indirection_frame", key)
         base_indirection_frame = self.get_frame(base_page_indirection_num)
         base_indirection_frame.update_val(base_rid, tail_record_rid)
 
@@ -605,7 +514,7 @@ class Table:
         self.page_directory[tail_record_rid] = directory
 
         self.tail_rid -= 1
-        print("End of update on key:", key,"\n")
+        if DEBUG_MODE: print("End of update on key:", key,"\n")
 
     
     def merge(self, key):
@@ -657,7 +566,7 @@ class Table:
                     base_page_frame.make_dirty()
                     base_page_frame.unpin_page()
 
-            print("changing to new indirection")
+            if DEBUG_MODE: print("changing to new indirection")
 
             base_indirection_frame = self.get_frame(base_page_indirection_num)
             base_indirection_frame.pin_page()
@@ -726,7 +635,7 @@ class Table:
 
             #Have complete column start insert
 
-            print(f"merging. this is the new base record {columns}")
+            if DEBUG_MODE: print(f"merging. this is the new base record {columns}")
 
             base_record = self.create_consolidated_record(indirection_value,*columns)
             record_col = base_record.columns
@@ -748,7 +657,7 @@ class Table:
             # self.base_rid += 1
 
 
-            print("changing to new indirection")
+            if DEBUG_MODE: print("changing to new indirection")
             base_indirection_frame = self.get_frame(base_page_indirection_num)
             base_indirection_frame.pin_page()
             base_indirection_frame.page.update_slot(base_rid, indirection_value)
@@ -789,8 +698,7 @@ class Table:
         while 1 and self.terminate == 0:
             if (self.number_of_updates % 20000) == 0 and (self.number_of_updates != 0):
                 self.number_of_updates +=1
-                print("starting a merge process", self.number_of_updates)
-                # copy_page_directory = copy.copy(self.page_directory)
+                if DEBUG_MODE: print("starting a merge process", self.number_of_updates)
                 # copy_page_directory = self.page_directory.copy()
                 copy_page_directory = dict(self.page_directory)
                 for key in copy_page_directory:
@@ -906,7 +814,7 @@ class Table:
                 value = frame.get_slot(base_slot)
                 base_record.append(value)
                 
-            print("base", base_record)
+            if DEBUG_MODE: print("base", base_record)
 
             if (base_indirection_val != NULL_PTR) and (self.tps >= base_indirection_val): #getting recent_record
                 self.get_recent_record(base_indirection_val, base_record)

@@ -39,7 +39,7 @@ class TransactionWorker:
         self.result = len(list(filter(lambda x: x, self.stats)))
 
     def display_worker(self):
-        print("len(transactions)",len(self.transactions))
+        if DEBUG_MODE: print("len(transactions)",len(self.transactions))
         for i in range(len(self.transactions)):
             self.transactions[i].print_queries()
             #print(self.transactions[i].display_transaction())

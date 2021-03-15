@@ -42,10 +42,9 @@ class BufferPool:
        # print("making new page/frame")
 
         if not os.path.exists(file_name): 
-            print("goes in here")
             frame_to_return = self.make_new_frame(table_name,num_columns,page_num)
             page_to_put_in_pool = page_num
-            print("Base page being inserted into buffer:", page_to_put_in_pool)
+            if DEBUG_MODE: print("Base page being inserted into buffer:", page_to_put_in_pool)
             self.frame_cache[page_to_put_in_pool] = frame_to_return
             self.frame_cache.move_to_end(page_to_put_in_pool)
             self.number_current_pages += 1
@@ -63,7 +62,7 @@ class BufferPool:
             data = f.read(seek_mult)
             page.data = bytearray(data)
             if sys.getsizeof(data) < 80:
-                print("Allocating space for empty page of size:---------------------",sys.getsizeof(data))
+                if DEBUG_MODE: print("Allocating space for empty page of size:---------------------",sys.getsizeof(data))
                 page.data = bytearray(PAGE_CAPACITY_IN_BYTES)
 
         frame = Frame(page_num, page, table_name, num_columns)
@@ -80,9 +79,8 @@ class BufferPool:
         file_name = self.path + "/" + table_name + "_tail_" + str(file_num) + ".bin"
        # print("making new page/frame")
 
-        print(file_name)
+        if DEBUG_MODE: print(file_name)
         if not os.path.exists(file_name): 
-            #print("goes in here")
             frame_to_return = self.make_new_frame(table_name,num_columns,page_num)
             frame_to_return.is_tail = True
             page_to_put_in_pool = (page_num * -1) - num_columns
@@ -103,7 +101,7 @@ class BufferPool:
             data = f.read(seek_mult)
             page.data = bytearray(data)
             if sys.getsizeof(data) < 80:
-                print("Allocating space for empty page of size:--------------------",sys.getsizeof(data))
+                if DEBUG_MODE: ("Allocating space for empty page of size:--------------------",sys.getsizeof(data))
                 page.data = bytearray(PAGE_CAPACITY_IN_BYTES)
 
         page_to_put_in_pool = (page_num * -1) - num_columns
@@ -111,11 +109,11 @@ class BufferPool:
         frame = Frame(page_num, page, table_name, num_columns)
 
         # page_to_put_in_pool = page_num
-        print("Tail page being inserted into buffer:", page_to_put_in_pool)
+        if DEBUG_MODE: print("Tail page being inserted into buffer:", page_to_put_in_pool)
 
         self.frame_cache[page_to_put_in_pool] = frame
         self.frame_cache.move_to_end(page_to_put_in_pool)
-        print("DID THIS WORK")
+        if DEBUG_MODE: print("DID THIS WORK")
 
         test = self.frame_cache[page_to_put_in_pool]
         test.print_page()
@@ -196,7 +194,7 @@ class BufferPool:
 
     def print_pool(self):
         if len(self.frame_cache) == 0:
-            print("BufferPool is empty")
+            if DEBUG_MODE: print("BufferPool is empty")
         else:
             for frame in self.frame_cache:#.values():
                 frame.print_page()
@@ -220,11 +218,11 @@ class BufferPool:
         if (is_dirty):
             if lru_frame.is_tail == True:
             # if lru_frame.page.page_num < 0:
-                print("Persisting tail LRU Frame ", key)
+                if DEBUG_MODE: print("Persisting tail LRU Frame ", key)
                 lru_frame.write_frame_tail(self.path)
                 lru_frame.is_tail = False
             else:
-                print("Persisting LRU Frame ", key)
+                if DEBUG_MODE: print("Persisting LRU Frame ", key)
                 lru_frame.write_frame(self.path)
             # print("Persisting LRU Frame ", key)
             # lru_frame.write_frame(self.path)
@@ -284,11 +282,11 @@ class BufferPool:
 
             if data_has_no_contents:
                 if diagnostic_messages:
-                    print("Reached Last Record.")
+                    if DEBUG_MODE: print("Reached Last Record.")
                 page.data = None
             else:
                 if diagnostic_messages:
-                    print(f"Page {page.page_num}: in Bufferpool for Scan...")
+                    if DEBUG_MODE: print(f"Page {page.page_num}: in Bufferpool for Scan...")
 
         frame = Frame(page_num, page, table_name, num_columns)
         self.frame_cache[page_num] = frame

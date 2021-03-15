@@ -31,7 +31,7 @@ class Page:
     def write_slot(self, rid, value): # needs to be tested
         val_as_bytes = value.to_bytes(INTEGER_CAPACITY_IN_BYTES, 'big')
         slot_start = (rid-1) % int(PAGE_CAPACITY_IN_BYTES/INTEGER_CAPACITY_IN_BYTES) 
-        print("RID:", rid, "page_num:", self.page_num, "slot_start:", slot_start)
+        if DEBUG_MODE: print("RID:", rid, "page_num:", self.page_num, "slot_start:", slot_start)
         slot_num = slot_start * INTEGER_CAPACITY_IN_BYTES
         allocated = 0
 
@@ -40,14 +40,14 @@ class Page:
                 try:
                     self.data[slot_num + byte_index] = val_as_bytes[byte_index]
                 except:
-                    print("REWRITINGGGGGGGGGG---------------------- page:", self.page_num)
+                    if DEBUG_MODE: print("REWRITINGGGGGGGGGG---------------------- page:", self.page_num)
                     if allocated == 0:
                         self.data = bytearray(PAGE_CAPACITY_IN_BYTES)
                     allocated = 1
                     self.data[slot_num + byte_index] = val_as_bytes[byte_index]
             self.num_records += 1
         else:
-            print("OUTOFRANGE base")
+            if DEBUG_MODE: print("OUTOFRANGE base")
             raise IndexError("Out of Range!")
 
 
@@ -107,15 +107,15 @@ class Page:
 
 
     def display_internal_memory(self):
-        print("Page ", self.page_num)
+        if DEBUG_MODE: print("Page ", self.page_num)
         slot_val = []
             
         for bytearray_index in range(len(self.data)):
             slot_val.append(self.data[bytearray_index])
             
             if len(slot_val) == INTEGER_CAPACITY_IN_BYTES:
-                print(slot_val, end=' = ')
-                print(self.broken_bytes_to_int(slot_val))
+                if DEBUG_MODE: print(slot_val, end=' = ')
+                if DEBUG_MODE: print(self.broken_bytes_to_int(slot_val))
                 slot_val.clear()
 
 
@@ -125,7 +125,7 @@ class Page:
             try:
                 byte_val.append(self.data[byte_i + (slot_num * INTEGER_CAPACITY_IN_BYTES)])
             except:
-                print("byte_val doesnt exist")
+                if DEBUG_MODE: print("byte_val doesnt exist")
 
         integer = self.broken_bytes_to_int(byte_val)
         return integer

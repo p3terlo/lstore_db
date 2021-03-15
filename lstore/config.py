@@ -2,6 +2,10 @@
 # PageSize, StartRID, etc..
 import sys
 
+class init:
+    def __init__(self):
+        pass
+
 
 THREAD_MASTER = []
 SUCCESS = True
@@ -31,3 +35,5 @@ PAGE_NUM_COL = 1
 SLOT_NUM_COL = 2
 
 MAX_INT = int(sys.maxsize)
+
+DEBUG_MODE = 0

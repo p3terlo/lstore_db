@@ -31,7 +31,7 @@ class Transaction:
 
     def print_queries(self):
         for query, args in self.queries:
-            print(query, args)
+            if DEBUG_MODE: print(query, args)
 
     def abort(self):
         #TODO: do roll-back and any other necessary operations
@@ -43,4 +43,4 @@ class Transaction:
 
     def display_transaction(self):
         for i in range(len(self.queries)):
-            print(self.queries[i])            
+            if DEBUG_MODE: print(self.queries[i])            

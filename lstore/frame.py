@@ -126,7 +126,7 @@ class Frame:
         self.is_dirty = False
 
     def print_page(self):
-        print(f"Page Identity: {self.key, self.page, self.table_name}")
+        if DEBUG_MODE: print(f"Page Identity: {self.key, self.page, self.table_name}")
         # self.page.display_internal_memory()
 
 

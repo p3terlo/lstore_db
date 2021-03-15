@@ -1,9 +1,9 @@
 from lstore.db import Database
 from lstore.query import Query
-#from lstore.config import init
+from lstore.config import init
 import sys
 from random import choice, randint, sample, seed
-#init()
+init()
 
 db = Database()
 db.open('./ECS165')
@@ -31,10 +31,11 @@ for key in keys:
         if column != records[key][i]:
             error = True
     if error:
-        print('select error on', key, ':', record, ', correct:', records[key])
+        # print('select error on', key, ':', record, ', correct:', records[key])
         sys.exit(0)
     else:
-        print('select on', key, ':', record)
+        # print('select on', key, ':', record)
+        randomvar = 1
 print("Select finished")
 
 
@@ -53,18 +54,13 @@ for _ in range(10):
                 if column != records[key][j]:
                     error = True
             if error:
-                print('update error on', original, 'and', updated_columns, ':', record.columns, ', correct:', records[key])
+                # print('update error on', original, 'and', updated_columns, ':', record.columns, ', correct:', records[key])
                 sys.exit(0)
             else:
-                print('update on', original, 'and', updated_columns, ':', record)
+                # print('update on', original, 'and', updated_columns, ':', record)
+                randomvar=1
             updated_columns[i] = None
 print("Update finished")
-
-
-print("------------")
-
-# for key in keys:
-#     query.merge(key)
 
 
 for key in keys:
@@ -74,10 +70,11 @@ for key in keys:
         if column != records[key][i]:
             error = True
     if error:
-        print('select error on', key, ':', record.columns, ', correct:', records[key])
+        # print('select error on', key, ':', record.columns, ', correct:', records[key])
         sys.exit(0)
     else:
-        print('select on', key, ':', record)
+        # print('select on', key, ':', record)
+        randomvar = 1
 print("Select finished 2")
 
 
@@ -87,9 +84,11 @@ for i in range(0, 100):
     column_sum = sum(map(lambda key: records[key][0], keys[r[0]: r[1] + 1]))
     result = query.sum(keys[r[0]], keys[r[1]], 0)
     if column_sum != result:
-        print('sum error on [', keys[r[0]], ',', keys[r[1]], ']: ', result, ', correct: ', column_sum)
+        # print('sum error on [', keys[r[0]], ',', keys[r[1]], ']: ', result, ', correct: ', column_sum)
+        sys.exit(0)
     else:
-        print('sum on [', keys[r[0]], ',', keys[r[1]], ']: ', column_sum)
+        # print('sum on [', keys[r[0]], ',', keys[r[1]], ']: ', column_sum)
+        randomvar=1
 print("Aggregate finished")
 
 for key in keys:
@@ -101,7 +100,8 @@ for key in keys:
         print("Error!", prev_record, new_record)
         sys.exit(1)
     else:
-        print(prev_record, new_record)
+        # print(prev_record, new_record)
+        randomvar = 1
     
 print("increment done")
 

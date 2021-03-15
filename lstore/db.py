@@ -28,7 +28,6 @@ class Database():
         for i in self.tables:
             self.tables[i].endBackground()
         # self.bufferpool.print_pool()
-        # pass
 
 
     def create_table(self, name, num_columns, key):
@@ -47,14 +46,6 @@ class Database():
             self.tables.pop(name)
         except KeyError:
             print("drop_table Error: No table exists with name %s" % (name))
-
-
-    # def get_table(self, name):
-    #     try:
-    #         table = self.tables[name]
-    #         return table
-    #     except KeyError:
-    #         print("get_table Error: No table exists with name %s" % (name))
 
 
     def get_table(self, table_name: str):
