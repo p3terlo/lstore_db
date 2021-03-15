@@ -5,10 +5,9 @@ from lstore.transaction import Transaction
 from lstore.transaction_worker import TransactionWorker
 from lstore.config import *
 
-import sys
 from random import choice, randint, sample, seed
 
-# init()
+init()
 db = Database()
 db.open('./ECS165')
 grades_table = db.create_table('Grades', 5, 0)
@@ -25,7 +24,6 @@ try:
     grades_table.index.create_index(4)
 except Exception as e:
     print('Index API not implemented properly, tests may fail.')
-    sys.exit(0)
 
 transaction_workers = []
 insert_transactions = []
@@ -40,7 +38,6 @@ for i in range(num_threads):
     transaction_workers[i].add_transaction(select_transactions[i])
     transaction_workers[i].add_transaction(update_transactions[i])
 worker_keys = [ {} for t in transaction_workers ]
-
 
 for i in range(0, 1000):
     key = 92106429 + i
@@ -80,32 +77,25 @@ for j in range(0, num_threads):
             updated_columns = [None, None, None, None, None]
 
 
-count = 0
-
-
 manager = PlanningThreadManager(THREAD_MASTER)
 manager.init_threads()
-# manager.print_threads()
 
 execution_manager = ExecutionThreadManager(manager)
 execution_manager.init_threads()
     
-
 # print("running")
 # for transaction_worker in transaction_workers:
 #      transaction_worker.run()
 
-#Wait for all the threads
-
 score = len(keys)
 for key in keys:
-     correct = records[key]
-     query = Query(grades_table)
+    correct = records[key]
+    query = Query(grades_table)
     
-     result = query.select(key, 0, [1, 1, 1, 1, 1])[0].columns
-     if correct != result:
-         print('select error on primary key', key, ':', result, ', correct:', correct)
-         score -= 1
+    result = query.select(key, 0, [1, 1, 1, 1, 1])[0].columns
+    if correct != result:
+        print('select error on primary key', key, ':', result, ', correct:', correct)
+        score -= 1
 print('Score', score, '/', len(keys))
 
 db.close()

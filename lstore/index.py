@@ -63,11 +63,15 @@ class Index:
 
     def create_index(self, column_number=0):
         self.indices[column_number] = IOBTree()
-        # FIXME !!
-        # Copy all the data in table to B-TREE
-        # For Milestone 1, we are only creating_index in col 0
-        # So I left as is.
-        pass
+   
+
+
+    def create_index(self, column_number = 0):
+        if column_number < 0 or column_number >= len(self.indices):
+            raise  IndexError(f"No Column {column_number} in Table.")
+
+        elif self.indices[column_number] is None:
+            self.indices[column_number] = IOBTree()
 
     """
     # optional: Drop index of specific column
@@ -97,5 +101,16 @@ class Index:
         else: 
             self.indices[column].insert(key, value)
 
-    
+    def update(self, key, old_value, new_value, column=0):
+        if self.indices[column] is not None:
+            if self.indices[column].has_key(key):
+                values = self.indices[column].pop(key)
+
+                if len(values) == 1:
+                    self.indices[column].insert(key, new_value)
+                else:
+                    new_values = [value for value in values if value != old_value] + [new_value]
+                    self.indices[column].insert(key, new_values)
+        else:
+            raise IndexError(f"No Index at Column {column}!")
 

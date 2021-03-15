@@ -234,7 +234,7 @@ class Table:
 
         #get_rid, return if false
         rid = self.index.locate(column=0, value=key)[0]
-        if rid == None:
+        if rid == NULL_PTR:
             return [False]
 
         page_dict = self.page_directory[rid]
@@ -677,18 +677,11 @@ class Table:
         else:
             return
 
-# copy_of_base_pages = []
-        # for _ in range(NUM_DEFAULT_COLUMNS + self.num_columns):
-        #     new_base_page = Page()
-        #     copy_of_base_pages.append(new_base_page)
-
-
 
     def delete(self, key):
         try:
             rid = self.index.locate(column=0, value=key)[0]
-            rid = None
-
+            self.index.update(key, rid, NULL_PTR, 0)
             return True
         except:
             return False
@@ -739,56 +732,6 @@ class Table:
 #         return page_id
 
 
- # def add(self, *columns):
-
-    #     # Initialize values
-    #     rid = self.base_rid
-    #     record_key = columns[self.key]
-
-    #     base_record = self.create_base_record(*columns)
-    #     record_col = base_record.columns
-
-    #     total_columns = len(record_col)
-
-    #     print("\ntotal columns to write:", record_col)
-        
-    #     # Insert record in index
-    #     # Key -> record -> RID
-    #     self.index.insert(record_key, base_record) #update
-
-    #     # Get page number from RID
-    #     page_dict = self.calculate_base_page_numbers(total_columns, rid)
-
-    #     slot_num = page_dict[SLOT_NUM_COL]
-    #     starting_page_num = page_dict[PAGE_NUM_COL]
-    #     page_range_num = page_dict[PAGE_RANGE_COL]
-
-    #     # print(f"Starting page num: {starting_page_num}")
-
-    #     # Write record to pages
-    #     for i in range(total_columns):
-
-    #         current_page = starting_page_num + i
-    #         ###print(f"Attepting to write to --> {self.name}: {total_columns}: {current_page}")
-    #         frame = self.bufferpool.get_frame_from_pool(self.name, total_columns, current_page)
-    #         frame.pin_page()
-    #         print("Retrieved Frame!")
-    #         frame.page.display_internal_memory()
-    #         frame.page.write_slot(rid, record_col[i])
-    #         print("writing", record_col[i])
-    #         frame.make_dirty()
-    #         frame.page.display_internal_memory()
-    #         frame.unpin_page()
-    #         print("WRITE DONE")
-           
-    #     # Update page directory
-    #     directory = [page_range_num, starting_page_num, slot_num]
-    #     print("inserting", rid, "into page directory")
-    #     self.page_directory[rid] = directory
-
-    #     self.base_rid += 1
-
-
     def sum(self, start_range, end_range, col_index_to_add):
         total = 0
 
@@ -820,36 +763,5 @@ class Table:
                 self.get_recent_record(base_indirection_val, base_record)
 
             total += base_record[col_index_to_add]
-
-            # #Grab page locations from page_directory
-            # pages = self.page_directory[rid] 
-            # page_num = pages[PAGE_NUM_COL]
-            # slot_num = pages[SLOT_NUM_COL]
-
-            # base_indirection_frame = self.bufferpool.get_frame_from_pool(self.name, NUM_DEFAULT_COLUMNS + self.num_columns, indirection_page_num)
-
-
-            # indirection = self.base_pages[pages[PAGE_NUM_COL]+INDIRECTION_COLUMN].grab_slot(pages[SLOT_NUM_COL])
-
-            # # If updates exist
-            # if indirection != NULL_PTR:
-            #     pages_tail = self.page_directory[indirection]
-
-            #     schema = self.tail_pages[pages_tail[PAGE_NUM_COL]+SCHEMA_ENCODING_COLUMN].grab_slot(pages_tail[SLOT_NUM_COL])
-            #     leadingZeros = "0" * self.num_columns
-            #     schema_string = leadingZeros + str(schema)
-            #     num = self.num_columns * -1
-            #     schema_string = schema_string[num:]
-
-            #     # If the column we want has been updated
-            #     if schema_string[col_index_to_add] == "1":
-            #         val_to_add = self.tail_pages[pages_tail[PAGE_NUM_COL] + NUM_DEFAULT_COLUMNS + col_index_to_add].grab_slot(pages_tail[SLOT_NUM_COL])
-            #         total = total + val_to_add
-            #     # Use values from base pages
-            #     else:
-            #         total = total + self.base_pages[pages[PAGE_NUM_COL] + NUM_DEFAULT_COLUMNS + col_index_to_add].grab_slot(pages[SLOT_NUM_COL])
-            # # Use values from base pages
-            # else:
-            #     total = total + self.base_pages[pages[PAGE_NUM_COL] + NUM_DEFAULT_COLUMNS + col_index_to_add].grab_slot(pages[SLOT_NUM_COL])
 
         return total
