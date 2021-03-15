@@ -22,6 +22,10 @@ class Record:
         print("Rid: %d with key %d" % (self.rid ,self.key))
 
 
+    def __str__(self):
+        return f"{self.columns}"
+
+
 class Table:
     """
     :param name: string         #Table name
@@ -44,6 +48,7 @@ class Table:
 
         self.number_of_updates = 0
         self.terminate = 0
+        self.tps = MAX_INT
 
 
     def pass_bufferpool(self, bufferpool):
@@ -243,7 +248,7 @@ class Table:
             
         print("base", base_record)
 
-        if base_indirection_val != NULL_PTR: #getting recent_record
+        if (base_indirection_val != NULL_PTR) and (self.tps >= base_indirection_val): #getting recent_record
             self.get_recent_record(base_indirection_val, base_record)
 
         #returning columns based on query_columns
@@ -673,7 +678,6 @@ class Table:
         if base_rid == -1:
             return False
 
-
         #Get page locations of base record
         page_dict = self.page_directory[base_rid]
         base_page_num = page_dict[PAGE_NUM_COL]
@@ -754,8 +758,11 @@ class Table:
             #index/page_directory
             # self.index.insert(columns[self.key], self.base_rid)
             directory = [page_dict[PAGE_RANGE_COL], starting_page_num, page_dict[SLOT_NUM_COL]]
-            self.page_directory[self.base_rid] = directory
-            self.base_rid += 1
+            self.page_directory[base_rid] = directory
+            # self.page_directory[self.base_rid] = directory
+            # self.base_rid += 1
+            if self.tps > indirection_value:
+                self.tps = indirection_value
 
             return
         else:
@@ -780,7 +787,7 @@ class Table:
 
     def runMergeInBackground(self):
         while 1 and self.terminate == 0:
-            if (self.number_of_updates % 10000) == 0 and (self.number_of_updates != 0):
+            if (self.number_of_updates % 20000) == 0 and (self.number_of_updates != 0):
                 self.number_of_updates +=1
                 print("starting a merge process", self.number_of_updates)
                 # copy_page_directory = copy.copy(self.page_directory)
@@ -799,6 +806,7 @@ class Table:
 
     def endBackground(self):
         self.terminate = 1
+
 
 
 
@@ -873,47 +881,47 @@ class Table:
     #     self.base_rid += 1
 
 
-    # def sum(self, start_range, end_range, col_index_to_add):
-    #     total = 0
+    def sum(self, start_range, end_range, col_index_to_add):
+        total = 0
 
-    #     record_list = self.index.locate_range(start_range, end_range, column = 0)
+        record_list = self.index.locate_range(start_range, end_range, column = 0)
 
-    #     # No records found within range
-    #     if len(record_list) == 0:
-    #         return False
+        # No records found within range
+        if len(record_list) == 0:
+            return False
 
-    #     for record in record_list:
-    #         rid = record.rid
+        for record in record_list:
+            rid = record.rid
 
-    #         #Grab page locations from page_directory
-    #         pages = self.page_directory[rid] 
-    #         page_num = pages[PAGE_NUM_COL]
-    #         slot_num = pages[SLOT_NUM_COL]
+            #Grab page locations from page_directory
+            pages = self.page_directory[rid] 
+            page_num = pages[PAGE_NUM_COL]
+            slot_num = pages[SLOT_NUM_COL]
 
-    #         base_indirection_frame = self.bufferpool.get_frame_from_pool(self.name, NUM_DEFAULT_COLUMNS + self.num_columns, indirection_page_num)
+            base_indirection_frame = self.bufferpool.get_frame_from_pool(self.name, NUM_DEFAULT_COLUMNS + self.num_columns, indirection_page_num)
 
 
-    #         indirection = self.base_pages[pages[PAGE_NUM_COL]+INDIRECTION_COLUMN].grab_slot(pages[SLOT_NUM_COL])
+            indirection = self.base_pages[pages[PAGE_NUM_COL]+INDIRECTION_COLUMN].grab_slot(pages[SLOT_NUM_COL])
 
-    #         # If updates exist
-    #         if indirection != NULL_PTR:
-    #             pages_tail = self.page_directory[indirection]
+            # If updates exist
+            if indirection != NULL_PTR:
+                pages_tail = self.page_directory[indirection]
 
-    #             schema = self.tail_pages[pages_tail[PAGE_NUM_COL]+SCHEMA_ENCODING_COLUMN].grab_slot(pages_tail[SLOT_NUM_COL])
-    #             leadingZeros = "0" * self.num_columns
-    #             schema_string = leadingZeros + str(schema)
-    #             num = self.num_columns * -1
-    #             schema_string = schema_string[num:]
+                schema = self.tail_pages[pages_tail[PAGE_NUM_COL]+SCHEMA_ENCODING_COLUMN].grab_slot(pages_tail[SLOT_NUM_COL])
+                leadingZeros = "0" * self.num_columns
+                schema_string = leadingZeros + str(schema)
+                num = self.num_columns * -1
+                schema_string = schema_string[num:]
 
-    #             # If the column we want has been updated
-    #             if schema_string[col_index_to_add] == "1":
-    #                 val_to_add = self.tail_pages[pages_tail[PAGE_NUM_COL] + NUM_DEFAULT_COLUMNS + col_index_to_add].grab_slot(pages_tail[SLOT_NUM_COL])
-    #                 total = total + val_to_add
-    #             # Use values from base pages
-    #             else:
-    #                 total = total + self.base_pages[pages[PAGE_NUM_COL] + NUM_DEFAULT_COLUMNS + col_index_to_add].grab_slot(pages[SLOT_NUM_COL])
-    #         # Use values from base pages
-    #         else:
-    #             total = total + self.base_pages[pages[PAGE_NUM_COL] + NUM_DEFAULT_COLUMNS + col_index_to_add].grab_slot(pages[SLOT_NUM_COL])
+                # If the column we want has been updated
+                if schema_string[col_index_to_add] == "1":
+                    val_to_add = self.tail_pages[pages_tail[PAGE_NUM_COL] + NUM_DEFAULT_COLUMNS + col_index_to_add].grab_slot(pages_tail[SLOT_NUM_COL])
+                    total = total + val_to_add
+                # Use values from base pages
+                else:
+                    total = total + self.base_pages[pages[PAGE_NUM_COL] + NUM_DEFAULT_COLUMNS + col_index_to_add].grab_slot(pages[SLOT_NUM_COL])
+            # Use values from base pages
+            else:
+                total = total + self.base_pages[pages[PAGE_NUM_COL] + NUM_DEFAULT_COLUMNS + col_index_to_add].grab_slot(pages[SLOT_NUM_COL])
 
-    #     return total
+        return total

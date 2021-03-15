@@ -237,6 +237,64 @@ class BufferPool:
     def evict_all(self):
         while len(self.frame_cache) != 0:
             self.evict()
+
+
+
+    def scan_column_pages(self, column_id: int, number_columns: int, table_name: str):
+        """
+        Given a column, we scan the whole data base 
+        to return a list of pages containing list of pages.
+        """
+        number_columns = 9
+        need_to_get_more_records = True
+        page_num_index = 0
+
+        while need_to_get_more_records:
+            page_number = column_id + number_columns * page_num_index
+            frame = self.read_page_from_disk(table_name, number_columns, page_number)            
+            if frame.page.data is not None:
+                yield frame.page
+            else:
+                need_to_get_more_records = False
+            page_num_index += 1
+
+    def read_page_from_disk(self, table_name: str, num_columns: int, page_num: int):
+        """
+        This method is used in the scanning of persisted records only.
+        """
+        diagnostic_messages = True
+
+        file_num = page_num % num_columns
+        file_name = self.path + "/" + table_name + "_" + str(file_num) + ".bin"
+       
+        if not os.path.exists(file_name): 
+            return self.make_new_frame(table_name,num_columns,page_num)
+        
+        seek_offset = int(page_num/num_columns)
+        seek_mult = PAGE_CAPACITY_IN_BYTES
+        
+        page = Page(page_num)
+        
+        with open(file_name, "rb") as f:
+            f.seek(seek_offset * seek_mult)
+            data = f.read(seek_mult)
+            page.data = bytearray(data)
+
+            data_has_no_contents = sys.getsizeof(data) < 80
+
+            if data_has_no_contents:
+                if diagnostic_messages:
+                    print("Reached Last Record.")
+                page.data = None
+            else:
+                if diagnostic_messages:
+                    print(f"Page {page.page_num}: in Bufferpool for Scan...")
+
+        frame = Frame(page_num, page, table_name, num_columns)
+        self.frame_cache[page_num] = frame
+        self.frame_cache.move_to_end(page_num)
+        self.number_current_pages += 1
+        return frame
  
     # def read_page_from_disk(self, table_name: str, num_columns: int, page_num: int) -> Frame:
     #     """

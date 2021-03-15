@@ -86,16 +86,7 @@ for j in range(0, num_threads):
 
 
 count = 0
-# print(len(transaction_workers))
-# for i in range(len(transaction_workers)):
-#     print("Transaction Worker:", count)
-#     #print(transaction_workers[i].display_worker())
-#     transaction_workers[i].display_worker()
-#     count += 1
-    
-# print("LIST")
-# for item in THREAD_MASTER:
-#     item.print_queries()
+
 
 manager = PlanningThreadManager(THREAD_MASTER)
 manager.init_threads()
