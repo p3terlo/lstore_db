@@ -129,33 +129,3 @@ class Page:
 
         integer = self.broken_bytes_to_int(byte_val)
         return integer
-
-      
-
-
-
-
-
-
-
-
-
-    # def update(self, value, slot):
-    #     slot_num = slot * 8
-    #     if(value != None):
-    #         # print("Value to update", value, "slot", slot_num)
-    #         val_to_bytes = value.to_bytes(8, 'big') #converting 64bit int to bytes
-
-    #         for i in range(8):
-    #             self.data[slot_num + i] = val_to_bytes[i]      
-
-
- # def write_slot_update(self, rid, value): # needs to be tested
-    #     val_as_bytes = value.to_bytes(INTEGER_CAPACITY_IN_BYTES, 'big')
-    #     slot_start = (rid-1) % int(PAGE_CAPACITY_IN_BYTES/INTEGER_CAPACITY_IN_BYTES) 
-    #     print("RID:", rid, "page_num:", self.page_num, "slot_start:", slot_start)
-    #     slot_num = slot_start * INTEGER_CAPACITY_IN_BYTES
-
-    #     for byte_index in range(INTEGER_CAPACITY_IN_BYTES): 
-    #         self.data[slot_num + byte_index] = val_as_bytes[byte_index]
-    #     self.num_records += 1

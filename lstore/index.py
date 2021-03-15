@@ -61,10 +61,8 @@ class Index:
     # optional: Create index on specific column
     """
 
-    def create_index(self, column_number=0):
-        self.indices[column_number] = IOBTree()
-   
-
+    # def create_index(self, column_number=0):
+    #     self.indices[column_number] = IOBTree()
 
     def create_index(self, column_number = 0):
         if column_number < 0 or column_number >= len(self.indices):

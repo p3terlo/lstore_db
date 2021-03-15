@@ -482,32 +482,10 @@ class Table:
             frame = self.get_frame_tail(current_page)
             frame.write_tail_slot(tail_record_rid, record_col[i])
 
-            """
-            frame.is_tail = True
-            frame.pin_page()
-            # frame.page.display_internal_memory()
-            print("tail_record_rid", tail_record_rid, "record_col[i]", record_col[i])
-            frame.page.write_slot_tail(tail_record_rid, record_col[i])
-            # print("Writing", record_col[i])
-            frame.make_dirty()
-            # frame.page.display_internal_memory()
-            frame.unpin_page()
-            """
-
         #Write new tail record to base indirection
         if DEBUG_MODE: print("get_frame_indirection_frame", key)
         base_indirection_frame = self.get_frame(base_page_indirection_num)
         base_indirection_frame.update_val(base_rid, tail_record_rid)
-
-        """
-        base_indirection_frame.pin_page()
-        # base_indirection_frame.page.display_internal_memory()
-        print("updating indirection w/",tail_record_rid, "which is on page:", base_page_indirection_num)
-        base_indirection_frame.page.update_slot(base_rid, tail_record_rid)
-        base_indirection_frame.make_dirty()
-        # base_indirection_frame.page.display_internal_memory()
-        base_indirection_frame.unpin_page()
-        """
         
         """UPDATE PAGE_DIRECTORY"""
         directory = [tail_page_range_num, tail_page_num, tail_slot_num]
@@ -627,13 +605,7 @@ class Table:
                     updated_value = updated_value_frame.page.grab_slot(tail_slot_num)
                     # updated_value_frame.unpin_page()
                     columns[i] = updated_value
-                    # base_page_frame = self.get_frame(base_first_column_num + i)
-                    # base_page_frame.pin_page()
-                    # base_page_frame.page.update_slot(base_rid, updated_value)
-                    # base_page_frame.make_dirty()
-                    # base_page_frame.unpin_page()
-
-            #Have complete column start insert
+             
 
             if DEBUG_MODE: print(f"merging. this is the new base record {columns}")
 
@@ -649,12 +621,6 @@ class Table:
                 frame = self.get_frame(current_page)
                 frame.write_slot(self.base_rid, record_col[i])
                 frame.make_dirty()
-
-            #index/page_directory
-            # self.index.insert(columns[self.key], self.base_rid)
-            # directory = [page_dict[PAGE_RANGE_COL], starting_page_num, page_dict[SLOT_NUM_COL]]
-            # self.page_directory[self.base_rid] = directory
-            # self.base_rid += 1
 
 
             if DEBUG_MODE: print("changing to new indirection")
@@ -709,27 +675,6 @@ class Table:
         self.terminate = 1
 
 
-
-
-
-# def sample_read(self):
-
-    #     bufferpool = self.bufferpool
-
-    #     for i in range(8):
-    #         bufferpool.read_page(self.name, i, self.num_columns + NUM_DEFAULT_COLUMNS)
-            
-        
-    #     print("done")
-
-
-# def fetch_page(self, key):
-#         record = self.index.locate(column = 0, value = key)[0]
-#         rid = record.rid
-#         page_locations = self.page_directory[rid]
-#         page_id = page_locations[PAGE_NUM_COL]
-
-#         return page_id
 
 
     def sum(self, start_range, end_range, col_index_to_add):

@@ -17,6 +17,16 @@ records = {}
 seed(3562901)
 num_threads = 8
 
+"""
+This m3_tester_part_2 is modified. Since we used QueCC,
+we were given permission to modify the structure of this tester
+in order to make sense with QueCC.
+1. We were allowed to assume all insertions are done at the beginning
+2. We modified the way in which the threads begin to make sense with 
+the QueCC structure. (lines 90-98)
+"""
+
+
 try:
     grades_table.index.create_index(1)
     grades_table.index.create_index(2)
