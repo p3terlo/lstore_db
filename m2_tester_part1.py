@@ -80,7 +80,7 @@ for key in keys:
         print('select on', key, ':', record)
 print("Select finished 2")
 
-"""
+
 
 for i in range(0, 100):
     r = sorted(sample(range(0, len(keys)), 2))
@@ -88,10 +88,24 @@ for i in range(0, 100):
     result = query.sum(keys[r[0]], keys[r[1]], 0)
     if column_sum != result:
         print('sum error on [', keys[r[0]], ',', keys[r[1]], ']: ', result, ', correct: ', column_sum)
-    # else:
-    #     print('sum on [', keys[r[0]], ',', keys[r[1]], ']: ', column_sum)
+    else:
+        print('sum on [', keys[r[0]], ',', keys[r[1]], ']: ', column_sum)
 print("Aggregate finished")
-"""
+
+for key in keys:
+    prev_record = query.select(key, 0, [1, 1, 1, 1, 1])[0].columns
+    query.increment(key, 1)
+    new_record = query.select(key, 0, [1, 1, 1, 1, 1])[0].columns
+
+    if prev_record[1] + 1 != new_record[1]:
+        print("Error!", prev_record, new_record)
+        sys.exit(1)
+    else:
+        print(prev_record, new_record)
+    
+print("increment done")
+
+
 db.close()
 
 # from lstore.db import Database
